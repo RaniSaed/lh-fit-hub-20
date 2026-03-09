@@ -247,8 +247,9 @@ export const trainingPlanService = {
     await new Promise(r => setTimeout(r, 300));
     return trainingPlans;
   },
-  getByUser: async (userId: string): Promise<TrainingPlan | undefined> => {
-    return trainingPlans.find(tp => tp.assignedTo === userId);
+  getByUser: async (userId: string): Promise<TrainingPlan[]> => {
+    await new Promise(r => setTimeout(r, 300));
+    return trainingPlans.filter(tp => tp.assignedTo === userId);
   },
   create: async (plan: Omit<TrainingPlan, 'id' | 'createdAt'>): Promise<TrainingPlan> => {
     const newPlan: TrainingPlan = { ...plan, id: String(Date.now()), createdAt: new Date().toISOString().split('T')[0] };
