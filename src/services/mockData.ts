@@ -118,15 +118,47 @@ const mockProgress: ProgressEntry[] = [
   { id: 'p2', userId: '3', date: '2024-07-01', weight: '83', fatPercent: '20', upperAbs: '88', midAbs: '86', lowerAbs: '90', rightArm: '36', leftArm: '35', rightThigh: '57', leftThigh: '56', glutes: '99', chest: '104' },
 ];
 
+// Helper functions for localStorage
+const loadData = <T>(key: string, deafultData: T[]): T[] => {
+  const stored = localStorage.getItem(key);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error(`Failed to parse ${key} from localStorage`, e);
+      return deafultData;
+    }
+  }
+  return deafultData;
+};
+
+const saveData = <T>(key: string, data: T[]) => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
 // Service functions
-let users = [...mockUsers];
-let coaches = [...mockCoaches];
-let trainingPlans = [...mockTrainingPlans];
-let progress = [...mockProgress];
+let users = loadData<User>('lh_users', [...mockUsers]);
+let coaches = loadData<Coach>('lh_coaches', [...mockCoaches]);
+let trainingPlans = loadData<TrainingPlan>('lh_plans', [...mockTrainingPlans]);
+let progress = loadData<ProgressEntry>('lh_progress', [...mockProgress]);
 
 export const authService = {
   login: async (username: string, password: string): Promise<User | null> => {
     await new Promise(r => setTimeout(r, 500));
+    // 1. Check coaches first
+    const coach = coaches.find(c => c.username === username && c.password === password);
+    if (coach) {
+      // Return a User object for the coach to satisfy the AuthContext interface
+      return {
+        id: coach.id,
+        username: coach.username,
+        phone: coach.phone,
+        password: coach.password,
+        role: 'coach',
+        createdAt: new Date().toISOString().split('T')[0] // or a stored date if we start tracking it
+      };
+    }
+    // 2. Check users list
     const user = users.find(u => u.username === username && u.password === password);
     return user || null;
   },
@@ -139,6 +171,7 @@ export const authService = {
       createdAt: new Date().toISOString().split('T')[0],
     };
     users.push(newUser);
+    saveData('lh_users', users);
     return newUser;
   },
 };
@@ -154,6 +187,29 @@ export const userService = {
   getAllAdmins: async (): Promise<User[]> => {
     return users.filter(u => u.role === 'coach' || u.role === 'superadmin');
   },
+  add: async (user: Omit<User, 'id' | 'createdAt' | 'role'> & { role?: User['role'] }): Promise<User> => {
+    const newUser: User = { 
+      ...user, 
+      id: String(Date.now()), 
+      role: user.role || 'client',
+      createdAt: new Date().toISOString().split('T')[0] 
+    };
+    users.push(newUser);
+    saveData('lh_users', users);
+    return newUser;
+  },
+  update: async (id: string, data: Partial<User>): Promise<User | null> => {
+    const idx = users.findIndex(u => u.id === id);
+    if (idx === -1) return null;
+    users[idx] = { ...users[idx], ...data };
+    saveData('lh_users', users);
+    return users[idx];
+  },
+  remove: async (id: string): Promise<boolean> => {
+    users = users.filter(u => u.id !== id);
+    saveData('lh_users', users);
+    return true;
+  },
 };
 
 export const coachService = {
@@ -164,19 +220,24 @@ export const coachService = {
   add: async (coach: Omit<Coach, 'id'>): Promise<Coach> => {
     const newCoach: Coach = { ...coach, id: String(Date.now()) };
     coaches.push(newCoach);
+    saveData('lh_coaches', coaches);
     const newUser: User = { ...newCoach, role: 'coach', createdAt: new Date().toISOString().split('T')[0] };
     users.push(newUser);
+    saveData('lh_users', users);
     return newCoach;
   },
   update: async (id: string, data: Partial<Coach>): Promise<Coach | null> => {
     const idx = coaches.findIndex(c => c.id === id);
     if (idx === -1) return null;
     coaches[idx] = { ...coaches[idx], ...data };
+    saveData('lh_coaches', coaches);
     return coaches[idx];
   },
   remove: async (id: string): Promise<boolean> => {
     coaches = coaches.filter(c => c.id !== id);
+    saveData('lh_coaches', coaches);
     users = users.filter(u => u.id !== id);
+    saveData('lh_users', users);
     return true;
   },
 };
@@ -192,6 +253,7 @@ export const trainingPlanService = {
   create: async (plan: Omit<TrainingPlan, 'id' | 'createdAt'>): Promise<TrainingPlan> => {
     const newPlan: TrainingPlan = { ...plan, id: String(Date.now()), createdAt: new Date().toISOString().split('T')[0] };
     trainingPlans.push(newPlan);
+    saveData('lh_plans', trainingPlans);
     return newPlan;
   },
 };
@@ -204,6 +266,7 @@ export const progressService = {
   addEntry: async (entry: Omit<ProgressEntry, 'id'>): Promise<ProgressEntry> => {
     const newEntry: ProgressEntry = { ...entry, id: String(Date.now()) };
     progress.push(newEntry);
+    saveData('lh_progress', progress);
     return newEntry;
   },
 };
