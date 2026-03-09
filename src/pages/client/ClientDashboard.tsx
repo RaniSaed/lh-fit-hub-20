@@ -9,6 +9,7 @@ import { LogOut, Languages, Download, Play, Dumbbell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import VideoPlayer from '@/components/video/VideoPlayer';
 
 const ClientDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -115,13 +116,7 @@ const ClientDashboard: React.FC = () => {
                 <div className="p-4 space-y-3">
                   {group.exercises.map(ex => (
                     <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 border border-border">
-                      <div className="w-10 h-10 rounded-lg gradient-blue flex items-center justify-center flex-shrink-0">
-                        {ex.videoUrl ? (
-                          <a href={ex.videoUrl} target="_blank" rel="noreferrer"><Play className="w-5 h-5 text-secondary-foreground" /></a>
-                        ) : (
-                          <Dumbbell className="w-5 h-5 text-secondary-foreground" />
-                        )}
-                      </div>
+                      <VideoPlayer videoUrl={ex.videoUrl} exerciseName={ex.name} />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground text-sm">{ex.name}</p>
                         <p className="text-xs text-muted-foreground">Machine #{ex.machineNumber}</p>
