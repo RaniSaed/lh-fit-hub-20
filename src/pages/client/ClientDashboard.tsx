@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { trainingPlanService, userService, type TrainingPlan } from '@/services/mockData';
+import { trainingPlanService, userService, progressService, type TrainingPlan, type ProgressEntry } from '@/services/mockData';
 import { LHLogo } from '@/components/LHLogo';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { LogOut, Languages, Download, Play, Dumbbell } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LogOut, Languages, Download, Play, Dumbbell, Activity, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import CalendarStrip from '@/components/dashboard/CalendarStrip';
-import { AnimatePresence } from 'framer-motion';
 
 const ClientDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const { t, toggleLang } = useLanguage();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'workout' | 'progress'>('workout');
   const [plans, setPlans] = useState<TrainingPlan[]>([]);
+  const [progressHistory, setProgressHistory] = useState<ProgressEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activePlan, setActivePlan] = useState<TrainingPlan | null>(null);
+  const [activeProgress, setActiveProgress] = useState<ProgressEntry | null>(null);
   const [coachName, setCoachName] = useState('');
 
   // Normalize local Date to YYYY-MM-DD
@@ -39,6 +41,8 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      progressService.getByUser(user.id).then(history => setProgressHistory(history));
+
       trainingPlanService.getByUser(user.id).then(userPlans => {
         setPlans(userPlans);
         // Default to today or most recent plan if available
@@ -61,13 +65,19 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     const targetStr = toDateStr(selectedDate);
+    
+    // Workout Map
     const plan = plans.find(p => p.startDate === targetStr);
     setActivePlan(plan || null);
+    
+    // Progress Map
+    const prog = progressHistory.find(p => p.date === targetStr);
+    setActiveProgress(prog || null);
     
     if (plan) {
         userService.getById(plan.assignedCoach).then(c => setCoachName(c?.username || ''));
     }
-  }, [selectedDate, plans]);
+  }, [selectedDate, plans, progressHistory]);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -124,23 +134,51 @@ const ClientDashboard: React.FC = () => {
         workoutDates={plans.map(p => p.startDate)}
       />
 
-      <main className="max-w-3xl mx-auto p-4 md:p-8 overflow-hidden">
+      {/* View Tabs */}
+      <div className="flex justify-center mt-6 mb-2 gap-3 px-4 max-w-3xl mx-auto overflow-x-auto scrollbar-hide">
+        <button
+          onClick={() => setActiveTab('workout')}
+          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+            activeTab === 'workout' 
+              ? 'bg-[#FF69B4] text-white shadow-md scale-105' 
+              : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
+          }`}
+        >
+          <Dumbbell className="w-4 h-4" />
+          {t('workoutPlan')}
+        </button>
+        <button
+          onClick={() => setActiveTab('progress')}
+          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+            activeTab === 'progress' 
+              ? 'bg-[#FF69B4] text-white shadow-md scale-105' 
+              : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          {t('progressTracker')}
+        </button>
+      </div>
+
+      <main className="max-w-3xl mx-auto p-4 md:px-8 pb-12 overflow-hidden">
         <AnimatePresence mode="wait">
-          {!activePlan ? (
-            <motion.div 
-              key="empty"
-              initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+          {activeTab === 'workout' && (
+            <motion.div
+              key="view-workout"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="mt-12 text-center bg-card p-10 rounded-2xl border border-border shadow-sm mx-4"
+              transition={{ duration: 0.2 }}
             >
-              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">🛋️</span>
-              </div>
-              <h2 className="text-xl font-display font-bold text-foreground mb-2">Rest Day!</h2>
-              <p className="text-muted-foreground">{t('restDay')}</p>
-            </motion.div>
-          ) : (
+              {!activePlan ? (
+                <div className="mt-8 text-center bg-card p-10 rounded-2xl border border-border shadow-sm mx-4">
+                  <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">🛋️</span>
+                  </div>
+                  <h2 className="text-xl font-display font-bold text-foreground mb-2">Rest Day!</h2>
+                  <p className="text-muted-foreground">{t('restDay')}</p>
+                </div>
+              ) : (
             <motion.div 
               key={activePlan.id}
               initial={{ opacity: 0, x: 30 }} 
@@ -204,6 +242,93 @@ const ClientDashboard: React.FC = () => {
                 <div className="bg-card border border-border rounded-xl p-5 shadow-card">
                   <h3 className="font-display font-semibold text-foreground mb-2">{t('coachNotes')}</h3>
                   <p className="text-sm text-muted-foreground">{activePlan.coachNotes}</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {activeTab === 'progress' && (
+            <motion.div
+              key="view-progress"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {!activeProgress ? (
+                <div className="mt-8 text-center bg-card p-10 rounded-2xl border border-border shadow-sm mx-4">
+                  <div className="w-20 h-20 bg-muted flex items-center justify-center mx-auto mb-6 rounded-2xl rotate-3">
+                    <Activity className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">{t('noMeasurementsRecorded')}</p>
+                </div>
+              ) : (
+                <div className="space-y-6 mt-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-[#FF69B4]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                      <span className="text-sm font-medium text-muted-foreground mb-1 z-10">{t('weight')}</span>
+                      <span className="text-4xl font-display font-bold text-foreground z-10">{activeProgress.weight} <span className="text-lg font-normal text-muted-foreground">kg</span></span>
+                    </div>
+                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-[#B0E0E6]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                      <span className="text-sm font-medium text-muted-foreground mb-1 z-10">{t('bodyFat')}</span>
+                      <span className="text-4xl font-display font-bold text-foreground z-10">{activeProgress.fatPercent} <span className="text-lg font-normal text-muted-foreground">%</span></span>
+                    </div>
+                  </div>
+
+                  <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="px-5 py-4 border-b border-border bg-muted/30">
+                      <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full gradient-blue inline-block" />
+                        {t('measurements')}
+                      </h3>
+                    </div>
+                    <div className="p-0">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-border">
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
+                          <span className="text-xs text-muted-foreground mb-1">{t('upperAbs')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.upperAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
+                          <span className="text-xs text-muted-foreground mb-1">{t('midAbs')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.midAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
+                          <span className="text-xs text-muted-foreground mb-1">{t('lowerAbs')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.lowerAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
+                          <span className="text-xs text-muted-foreground mb-1">{t('rightArm')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.rightArm || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
+                          <span className="text-xs text-muted-foreground mb-1">{t('leftArm')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.leftArm || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
+                          <span className="text-xs text-muted-foreground mb-1">{t('chest')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.chest || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors border-b-0">
+                          <span className="text-xs text-muted-foreground mb-1">{t('rightThigh')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.rightThigh || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors border-b-0">
+                          <span className="text-xs text-muted-foreground mb-1">{t('leftThigh')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.leftThigh || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors border-b-0">
+                          <span className="text-xs text-muted-foreground mb-1">{t('glutes')}</span>
+                          <span className="text-lg font-semibold text-foreground">{activeProgress.glutes || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </motion.div>

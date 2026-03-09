@@ -81,6 +81,21 @@ const translations: Translations = {
   oct: { en: 'Oct', ar: 'أكتوبر' },
   nov: { en: 'Nov', ar: 'نوفمبر' },
   dec: { en: 'Dec', ar: 'ديسمبر' },
+  // Progress Tracker Additions
+  workoutPlan: { en: 'Workout Plan', ar: 'خطة التمرين' },
+  weight: { en: 'Weight', ar: 'משקל' }, // Using Hebrew as requested for specifics
+  bodyFat: { en: 'Body Fat %', ar: 'אחוז שומן' },
+  measurements: { en: 'Measurements (cm)', ar: 'מידות (ס"מ)' },
+  upperAbs: { en: 'Upper Abs', ar: 'בטן עליונה' },
+  midAbs: { en: 'Middle Abs', ar: 'בטן אמצעית' },
+  lowerAbs: { en: 'Lower Abs', ar: 'בטן תחתונה' },
+  rightArm: { en: 'Right Arm', ar: 'זרוע ימין' },
+  leftArm: { en: 'Left Arm', ar: 'זרוע שמאל' },
+  thighs: { en: 'Thighs', ar: 'ירכיים' },
+  rightThigh: { en: 'Right Thigh', ar: 'ירך ימין' },
+  leftThigh: { en: 'Left Thigh', ar: 'ירך שמאל' },
+  glutes: { en: 'Glutes', ar: 'עכוז' },
+  noMeasurementsRecorded: { en: 'No measurements recorded for this date.', ar: 'לא נרשמו מדדים לתאריך זה.' },
 };
 
 interface LanguageContextType {
