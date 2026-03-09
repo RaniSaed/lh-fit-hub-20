@@ -39,8 +39,11 @@ const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onSelectDat
   }, []);
 
   const formatDateString = (d: Date) => {
-    // E.g. "2024-06-01" to match our mock data structure
-    return d.toISOString().split('T')[0];
+    // Manually format to YYYY-MM-DD in local time
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   };
 
   const getDayName = (d: Date) => {

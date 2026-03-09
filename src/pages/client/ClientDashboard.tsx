@@ -22,8 +22,20 @@ const ClientDashboard: React.FC = () => {
   const [activePlan, setActivePlan] = useState<TrainingPlan | null>(null);
   const [coachName, setCoachName] = useState('');
 
-  // Normalize date string for matching
-  const toDateStr = (d: Date) => d.toISOString().split('T')[0];
+  // Normalize local Date to YYYY-MM-DD
+  const toDateStr = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  // Parse YYYY-MM-DD back into local Date at Midnight
+  const parseDateStr = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    // month is 0-indexed in Date constructor
+    return new Date(year, month - 1, day);
+  };
 
   useEffect(() => {
     if (user) {
@@ -35,8 +47,12 @@ const ClientDashboard: React.FC = () => {
             const hasToday = userPlans.find(p => p.startDate === todayStr);
             if (!hasToday) {
                 // Find most recent past date
-                const sorted = [...userPlans].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-                setSelectedDate(new Date(sorted[0].startDate));
+                const sorted = [...userPlans].sort((a, b) => {
+                  const dateA = parseDateStr(a.startDate).getTime();
+                  const dateB = parseDateStr(b.startDate).getTime();
+                  return dateB - dateA;
+                });
+                setSelectedDate(parseDateStr(sorted[0].startDate));
             }
         }
       });
