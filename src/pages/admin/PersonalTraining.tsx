@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Plus, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import VideoUpload from '@/components/video/VideoUpload';
 
 const fullBodyGroups = ['Chest', 'Back', 'Shoulders', 'Arms', 'Abs', 'Legs'];
 const upperGroups = ['Chest', 'Back', 'Shoulders', 'Arms', 'Abs'];
@@ -182,18 +183,27 @@ const PersonalTraining: React.FC = () => {
               </h3>
 
               {group.exercises.map((ex, ei) => (
-                <div key={ex.id} className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2 items-end">
-                  <Input placeholder={t('machineName')} value={ex.machineNumber} onChange={e => updateExercise(gi, ei, 'machineNumber', e.target.value)} className="text-sm" />
-                  <Input placeholder={t('exerciseName')} value={ex.name} onChange={e => updateExercise(gi, ei, 'name', e.target.value)} className="text-sm" />
-                  <Input placeholder={t('videoLink')} value={ex.videoUrl} onChange={e => updateExercise(gi, ei, 'videoUrl', e.target.value)} className="text-sm" />
-                  <div className="flex gap-1">
+                <div key={ex.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-2 items-start border-b border-border/50 pb-4 last:border-0 last:pb-0">
+                  <div className="sm:col-span-3 space-y-2">
+                    <Input placeholder={t('machineName')} value={ex.machineNumber} onChange={e => updateExercise(gi, ei, 'machineNumber', e.target.value)} className="text-sm" />
+                    <Input placeholder={t('exerciseName')} value={ex.name} onChange={e => updateExercise(gi, ei, 'name', e.target.value)} className="text-sm" />
+                  </div>
+                  
+                  <div className="sm:col-span-5 h-full">
+                    <VideoUpload videoUrl={ex.videoUrl} onChange={(val) => updateExercise(gi, ei, 'videoUrl', val)} />
+                  </div>
+                  
+                  <div className="sm:col-span-3 flex gap-1 h-full items-center">
                     <Input type="number" placeholder={t('sets')} value={ex.sets} onChange={e => updateExercise(gi, ei, 'sets', Number(e.target.value))} className="text-sm w-16" />
                     <span className="self-center text-muted-foreground">×</span>
                     <Input type="number" placeholder={t('reps')} value={ex.reps} onChange={e => updateExercise(gi, ei, 'reps', Number(e.target.value))} className="text-sm w-16" />
                   </div>
-                  <button onClick={() => removeExercise(gi, ei)} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors self-center">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  
+                  <div className="sm:col-span-1 h-full flex items-center justify-end">
+                    <button onClick={() => removeExercise(gi, ei)} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
 
