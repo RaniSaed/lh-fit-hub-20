@@ -58,6 +58,8 @@ const translations: Translations = {
   addRow: { en: 'Add Row', ar: 'إضافة صف' },
   sets: { en: 'Sets', ar: 'مجموعات' },
   reps: { en: 'Reps', ar: 'تكرارات' },
+  dragDropVideo: { en: 'Drag & drop exercise video or click to browse (MP4, MOV supported)', ar: 'اسحب وأفلت فيديو التمرين أو انقر للتصفح (يدعم MP4, MOV)' },
+  uploadSuccess: { en: 'Upload Success', ar: 'تم الرفع بنجاح' },
 };
 
 interface LanguageContextType {
