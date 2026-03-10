@@ -1,0 +1,43 @@
+How to Access and Test Your Local PostgreSQL Database
+=====================================================
+
+Unlike a website or an API, a PostgreSQL database does not have a "URL" that you can just open in your web browser (like Chrome or Safari). Instead, it runs behind the scenes on a specific port, and you need a "Database Client" software to connect to it and view the tables/data.
+
+Your PostgreSQL database is currently running completely successfully inside Docker on your machine.
+
+Here are the connection details you need:
+------------------------------------------
+Host/Server: localhost  (or 127.0.0.1)
+Port: 5432
+Database Name: lh_fit_hub_db
+Username: lh_admin
+Password: supersecurepassword123
+
+How to View the Data (3 Options)
+------------------------------------------
+
+OPTION 1: Using a Visual Database Manager (Recommended & Easiest)
+If you want to see your data visually like an Excel spreadsheet, download one of these free tools:
+1. DBeaver (very popular, free) - https://dbeaver.io/
+2. TablePlus (clean UI, great for Mac) - https://tableplus.com/
+3. pgAdmin (official Postgres UI) - https://www.pgadmin.org/
+
+How to connect using one of these tools:
+- Open the app and create a new "PostgreSQL" connection.
+- Enter the details listed above (Host, Port, Database Name, Username, Password).
+- Click "Test Connection" or "Connect".
+- You will now see your tables (`users`, `training_plans`, `exercises`, etc.) and be able to double-click them to see the exact mock data we just seeded!
+
+OPTION 2: Using the Command Line (Terminal)
+If you prefer the terminal, you can connect directly into the Docker container running the database using this command:
+
+    docker exec -it lh-fit-hub-postgres psql -U lh_admin -d lh_fit_hub_db
+
+Once you hit Enter, your terminal will change to a `lh_fit_hub_db=#` prompt.
+- Type `\dt` and press Enter to see the list of all tables.
+- Type `SELECT * FROM users;` and press Enter to see your users.
+- Type `\q` to quit and go back to your normal terminal.
+
+OPTION 3: Testing via your API (Postman)
+Remember, your Flask backend is already securely connected to this database! 
+Any requests you make via Postman (e.g., `GET http://localhost:5001/api/users/`) are actively querying this exact Postgres database. If you create a new user via Postman, it is permanently saved in Postgres.
