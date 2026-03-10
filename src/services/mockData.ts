@@ -133,172 +133,133 @@ const mockProgress: ProgressEntry[] = [
   { id: 'p2', userId: '3', date: '2024-07-01', endDate: '', weight: '83', fatPercent: '20', upperAbs: '88', midAbs: '86', lowerAbs: '90', rightArm: '36', leftArm: '35', rightThigh: '57', leftThigh: '56', glutes: '99', chest: '104' },
 ];
 
-// Helper functions for localStorage
-const loadData = <T>(key: string, deafultData: T[]): T[] => {
-  const stored = localStorage.getItem(key);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      console.error(`Failed to parse ${key} from localStorage`, e);
-      return deafultData;
-    }
-  }
-  return deafultData;
-};
+// API Base URL
+const API_URL = 'http://localhost:5001/api';
 
-const saveData = <T>(key: string, data: T[]) => {
-  localStorage.setItem(key, JSON.stringify(data));
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('lh_access_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
 };
-
-// Service functions
-let users = loadData<User>('lh_users', [...mockUsers]);
-let coaches = loadData<Coach>('lh_coaches', [...mockCoaches]);
-let trainingPlans = loadData<TrainingPlan>('lh_plans', [...mockTrainingPlans]);
-let progress = loadData<ProgressEntry>('lh_progress', [...mockProgress]);
 
 export const authService = {
   login: async (username: string, password: string): Promise<User | null> => {
-    await new Promise(r => setTimeout(r, 500));
-    // 1. Check coaches first
-    const coach = coaches.find(c => c.username === username && c.password === password);
-    if (coach) {
-      // Return a User object for the coach to satisfy the AuthContext interface
-      return {
-        id: coach.id,
-        username: coach.username,
-        phone: coach.phone,
-        password: coach.password,
-        role: 'coach',
-        createdAt: new Date().toISOString().split('T')[0] // or a stored date if we start tracking it
-      };
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      localStorage.setItem('lh_access_token', data.token);
+      return data.user;
+    } catch (e) {
+      console.error('Login failed', e);
+      return null;
     }
-    // 2. Check users list
-    const user = users.find(u => u.username === username && u.password === password);
-    return user || null;
   },
   signup: async (username: string, phone: string, password: string): Promise<User> => {
-    await new Promise(r => setTimeout(r, 500));
-    const newUser: User = {
-      id: String(Date.now()),
-      username, phone, password,
-      role: 'client',
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    users.push(newUser);
-    saveData('lh_users', users);
-    return newUser;
+    const res = await fetch(`${API_URL}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, phone, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Signup failed');
+    return data;
   },
 };
 
 export const userService = {
   getAll: async (): Promise<User[]> => {
-    await new Promise(r => setTimeout(r, 300));
-    return users.filter(u => u.role === 'client');
+    const res = await fetch(`${API_URL}/users/`, { headers: getAuthHeaders() });
+    return res.json();
   },
   getById: async (id: string): Promise<User | undefined> => {
-    return users.find(u => u.id === id);
+    const res = await fetch(`${API_URL}/users/${id}`, { headers: getAuthHeaders() });
+    if (!res.ok) return undefined;
+    return res.json();
   },
   getAllAdmins: async (): Promise<User[]> => {
-    return users.filter(u => u.role === 'coach' || u.role === 'superadmin');
+    const res = await fetch(`${API_URL}/users/admins`, { headers: getAuthHeaders() });
+    return res.json();
   },
   add: async (user: Omit<User, 'id' | 'createdAt' | 'role'> & { role?: User['role'] }): Promise<User> => {
-    const newUser: User = {
-      ...user,
-      id: String(Date.now()),
-      role: user.role || 'client',
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    users.push(newUser);
-    saveData('lh_users', users);
-    return newUser;
+    const res = await fetch(`${API_URL}/users/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(user)
+    });
+    return res.json();
   },
   update: async (id: string, data: Partial<User>): Promise<User | null> => {
-    const idx = users.findIndex(u => u.id === id);
-    if (idx === -1) return null;
-    users[idx] = { ...users[idx], ...data };
-    saveData('lh_users', users);
-    return users[idx];
+    const res = await fetch(`${API_URL}/users/${id}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) return null;
+    return res.json();
   },
   remove: async (id: string): Promise<boolean> => {
-    users = users.filter(u => u.id !== id);
-    saveData('lh_users', users);
-    return true;
+    const res = await fetch(`${API_URL}/users/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return res.ok;
   },
 };
 
 export const coachService = {
   getAll: async (): Promise<Coach[]> => {
-    await new Promise(r => setTimeout(r, 300));
-    return coaches;
+    return userService.getAllAdmins(); // For simplicity, we fetch admins
   },
   add: async (coach: Omit<Coach, 'id'>): Promise<Coach> => {
-    const newCoach: Coach = { ...coach, id: String(Date.now()) };
-    coaches.push(newCoach);
-    saveData('lh_coaches', coaches);
-    const newUser: User = { ...newCoach, role: 'coach', createdAt: new Date().toISOString().split('T')[0] };
-    users.push(newUser);
-    saveData('lh_users', users);
-    return newCoach;
+    return userService.add({ ...coach, role: 'coach' }) as any;
   },
   update: async (id: string, data: Partial<Coach>): Promise<Coach | null> => {
-    const idx = coaches.findIndex(c => c.id === id);
-    if (idx === -1) return null;
-    coaches[idx] = { ...coaches[idx], ...data };
-    saveData('lh_coaches', coaches);
-    return coaches[idx];
+    return userService.update(id, data) as any;
   },
   remove: async (id: string): Promise<boolean> => {
-    coaches = coaches.filter(c => c.id !== id);
-    saveData('lh_coaches', coaches);
-    users = users.filter(u => u.id !== id);
-    saveData('lh_users', users);
-    return true;
+    return userService.remove(id);
   },
 };
 
 export const trainingPlanService = {
   getAll: async (): Promise<TrainingPlan[]> => {
-    await new Promise(r => setTimeout(r, 300));
-    return trainingPlans;
+    const res = await fetch(`${API_URL}/workouts/`, { headers: getAuthHeaders() });
+    return res.json();
   },
   getByUser: async (userId: string): Promise<TrainingPlan[]> => {
-    await new Promise(r => setTimeout(r, 300));
-    return trainingPlans.filter(tp => tp.assignedTo === userId);
+    const res = await fetch(`${API_URL}/workouts/?userId=${userId}`, { headers: getAuthHeaders() });
+    return res.json();
   },
   create: async (plan: Omit<TrainingPlan, 'id' | 'createdAt'>, overwriteId?: string): Promise<TrainingPlan> => {
-    if (overwriteId) {
-      const idx = trainingPlans.findIndex(p => p.id === overwriteId);
-      if (idx !== -1) {
-        trainingPlans[idx] = { ...plan, id: overwriteId, createdAt: trainingPlans[idx].createdAt };
-        saveData('lh_plans', trainingPlans);
-        return trainingPlans[idx];
-      }
-    }
-    const newPlan: TrainingPlan = { ...plan, id: String(Date.now()), createdAt: new Date().toISOString().split('T')[0] };
-    trainingPlans.push(newPlan);
-    saveData('lh_plans', trainingPlans);
-    return newPlan;
+    const url = overwriteId ? `${API_URL}/workouts/?overwriteId=${overwriteId}` : `${API_URL}/workouts/`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(plan)
+    });
+    return res.json();
   },
 };
 
 export const progressService = {
   getByUser: async (userId: string): Promise<ProgressEntry[]> => {
-    await new Promise(r => setTimeout(r, 300));
-    return progress.filter(p => p.userId === userId);
+    const res = await fetch(`${API_URL}/progress/?userId=${userId}`, { headers: getAuthHeaders() });
+    return res.json();
   },
   addEntry: async (entry: Omit<ProgressEntry, 'id'>, overwriteId?: string): Promise<ProgressEntry> => {
-    if (overwriteId) {
-      const idx = progress.findIndex(p => p.id === overwriteId);
-      if (idx !== -1) {
-        progress[idx] = { ...entry, id: overwriteId };
-        saveData('lh_progress', progress);
-        return progress[idx];
-      }
-    }
-    const newEntry: ProgressEntry = { ...entry, id: String(Date.now()) };
-    progress.push(newEntry);
-    saveData('lh_progress', progress);
-    return newEntry;
+    const url = overwriteId ? `${API_URL}/progress/?overwriteId=${overwriteId}` : `${API_URL}/progress/`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(entry)
+    });
+    return res.json();
   },
 };
