@@ -10,7 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import VideoPlayer from '@/components/video/VideoPlayer';
-import CalendarStrip from '@/components/dashboard/CalendarStrip';
+import FullCalendar from '@/components/dashboard/FullCalendar';
+import { ProgressAnalytics } from '@/components/dashboard/ProgressAnalytics';
 
 const ClientDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -39,6 +40,22 @@ const ClientDashboard: React.FC = () => {
     return new Date(year, month - 1, day);
   };
 
+  const getDatesInRange = (startStr: string, endStr?: string): string[] => {
+    if (!endStr) return [startStr];
+    const dates: string[] = [];
+    let current = parseDateStr(startStr);
+    const end = parseDateStr(endStr);
+
+    // Safety break, max 1000 days
+    let limit = 0;
+    while (current <= end && limit < 1000) {
+      dates.push(toDateStr(current));
+      current.setDate(current.getDate() + 1);
+      limit++;
+    }
+    return dates;
+  };
+
   useEffect(() => {
     if (user) {
       Promise.all([
@@ -49,8 +66,9 @@ const ClientDashboard: React.FC = () => {
         setPlans(userPlans);
 
         const todayStr = toDateStr(new Date());
-        const hasPlanToday = userPlans.find(p => p.startDate === todayStr);
-        const hasProgressToday = history.find(p => p.date === todayStr);
+
+        const hasPlanToday = userPlans.some(p => getDatesInRange(p.startDate, p.endDate).includes(todayStr));
+        const hasProgressToday = history.some(p => getDatesInRange(p.date, p.endDate).includes(todayStr));
 
         // Default to today if there is a plan or progress entry for today
         if (hasPlanToday || hasProgressToday) {
@@ -58,8 +76,8 @@ const ClientDashboard: React.FC = () => {
         } else if (userPlans.length > 0 || history.length > 0) {
           // Find most recent past date from both plans and progress history
           const allDates = [
-            ...userPlans.map(p => p.startDate),
-            ...history.map(p => p.date)
+            ...userPlans.flatMap(p => getDatesInRange(p.startDate, p.endDate)),
+            ...history.flatMap(p => getDatesInRange(p.date, p.endDate))
           ];
 
           // Deduplicate and sort descending
@@ -81,11 +99,11 @@ const ClientDashboard: React.FC = () => {
     const targetStr = toDateStr(selectedDate);
 
     // Workout Map
-    const plan = plans.find(p => p.startDate === targetStr);
+    const plan = plans.find(p => getDatesInRange(p.startDate, p.endDate).includes(targetStr));
     setActivePlan(plan || null);
 
     // Progress Map
-    const prog = progressHistory.find(p => p.date === targetStr);
+    const prog = progressHistory.find(p => getDatesInRange(p.date, p.endDate).includes(targetStr));
     setActiveProgress(prog || null);
 
     if (plan) {
@@ -142,11 +160,11 @@ const ClientDashboard: React.FC = () => {
         </div>
       </header>
 
-      <CalendarStrip
+      <FullCalendar
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
-        workoutDates={plans.map(p => p.startDate)}
-        progressDates={progressHistory.map(p => p.date)}
+        workoutDates={plans.flatMap(p => getDatesInRange(p.startDate, p.endDate))}
+        progressDates={progressHistory.flatMap(p => getDatesInRange(p.date, p.endDate))}
       />
 
       {/* View Tabs */}
@@ -154,8 +172,8 @@ const ClientDashboard: React.FC = () => {
         <button
           onClick={() => setActiveTab('workout')}
           className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeTab === 'workout'
-              ? 'bg-[#FF69B4] text-white shadow-md scale-105'
-              : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
+            ? 'bg-[#FF69B4] text-white shadow-md scale-105'
+            : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
             }`}
         >
           <Dumbbell className="w-4 h-4" />
@@ -164,8 +182,8 @@ const ClientDashboard: React.FC = () => {
         <button
           onClick={() => setActiveTab('progress')}
           className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeTab === 'progress'
-              ? 'bg-[#FF69B4] text-white shadow-md scale-105'
-              : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
+            ? 'bg-[#FF69B4] text-white shadow-md scale-105'
+            : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
             }`}
         >
           <TrendingUp className="w-4 h-4" />
@@ -214,7 +232,7 @@ const ClientDashboard: React.FC = () => {
                     </Button>
                   </div>
 
-                  {activePlan.muscleGroups.map((group, gi) => (
+                  {activePlan.muscleGroups.filter(group => group.exercises && group.exercises.length > 0).map((group, gi) => (
                     <div
                       key={gi}
                       className="bg-card border border-border rounded-xl overflow-hidden shadow-card"
@@ -278,71 +296,11 @@ const ClientDashboard: React.FC = () => {
                   <p className="text-muted-foreground">{t('noMeasurementsRecorded')}</p>
                 </div>
               ) : (
-                <div className="space-y-6 mt-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-[#FF69B4]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                      <span className="text-sm font-medium text-muted-foreground mb-1 z-10">{t('weight')}</span>
-                      <span className="text-4xl font-display font-bold text-foreground z-10">{activeProgress.weight} <span className="text-lg font-normal text-muted-foreground">kg</span></span>
-                    </div>
-                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-[#B0E0E6]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                      <span className="text-sm font-medium text-muted-foreground mb-1 z-10">{t('bodyFat')}</span>
-                      <span className="text-4xl font-display font-bold text-foreground z-10">{activeProgress.fatPercent} <span className="text-lg font-normal text-muted-foreground">%</span></span>
-                    </div>
-                  </div>
-
-                  <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-                    <div className="px-5 py-4 border-b border-border bg-muted/30">
-                      <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full gradient-blue inline-block" />
-                        {t('measurements')}
-                      </h3>
-                    </div>
-                    <div className="p-0">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-border">
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
-                          <span className="text-xs text-muted-foreground mb-1">{t('upperAbs')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.upperAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
-                          <span className="text-xs text-muted-foreground mb-1">{t('midAbs')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.midAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
-                          <span className="text-xs text-muted-foreground mb-1">{t('lowerAbs')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.lowerAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
-                          <span className="text-xs text-muted-foreground mb-1">{t('rightArm')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.rightArm || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
-                          <span className="text-xs text-muted-foreground mb-1">{t('leftArm')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.leftArm || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
-                          <span className="text-xs text-muted-foreground mb-1">{t('chest')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.chest || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors border-b-0">
-                          <span className="text-xs text-muted-foreground mb-1">{t('rightThigh')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.rightThigh || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors border-b-0">
-                          <span className="text-xs text-muted-foreground mb-1">{t('leftThigh')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.leftThigh || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                        <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors border-b-0">
-                          <span className="text-xs text-muted-foreground mb-1">{t('glutes')}</span>
-                          <span className="text-lg font-semibold text-foreground">{activeProgress.glutes || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <ProgressAnalytics
+                  activeProgress={activeProgress}
+                  progressHistory={progressHistory}
+                  user={user}
+                />
               )}
             </motion.div>
           )}

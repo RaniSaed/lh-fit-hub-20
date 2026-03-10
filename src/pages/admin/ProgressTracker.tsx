@@ -10,6 +10,7 @@ import autoTable from 'jspdf-autotable';
 
 const columns = [
   { key: 'date', he: 'תאריך' },
+  { key: 'endDate', he: 'עד תאריך' },
   { key: 'weight', he: 'משקל' },
   { key: 'fatPercent', he: 'אחוז שומן' },
   { key: 'upperAbs', he: 'בטן עליונה' },
@@ -50,6 +51,7 @@ const ProgressTracker: React.FC = () => {
     const entry = await progressService.addEntry({
       userId: selectedUser,
       date: newRow.date || localDateStr,
+      endDate: newRow.endDate || undefined,
       weight: newRow.weight || '',
       fatPercent: newRow.fatPercent || '',
       upperAbs: newRow.upperAbs || '',
@@ -132,7 +134,7 @@ const ProgressTracker: React.FC = () => {
                   <div key={c.key}>
                     <label className="text-xs text-muted-foreground">{c.he}</label>
                     <Input
-                      type={c.key === 'date' ? 'date' : 'text'}
+                      type={(c.key === 'date' || c.key === 'endDate') ? 'date' : 'text'}
                       value={newRow[c.key] || ''}
                       onChange={e => setNewRow({ ...newRow, [c.key]: e.target.value })}
                       className="mt-0.5 text-sm"

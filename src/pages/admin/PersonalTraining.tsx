@@ -29,6 +29,7 @@ const PersonalTraining: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
   const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [trainingType, setTrainingType] = useState<'fullbody' | 'upper_lower'>('fullbody');
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [cardioStart, setCardioStart] = useState('10-15 min');
@@ -79,6 +80,7 @@ const PersonalTraining: React.FC = () => {
       assignedTo: selectedUser,
       assignedCoach: assignedCoach,
       startDate,
+      endDate: endDate || undefined,
       type: trainingType,
       muscleGroups,
       cardio: { startDuration: cardioStart, endDuration: cardioEnd, totalHours: cardioTotal },
@@ -139,10 +141,14 @@ const PersonalTraining: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
           <div>
             <label className="text-sm font-medium text-foreground">{t('startDate')}</label>
             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-foreground">End Date (Optional)</label>
+            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1" min={startDate} />
           </div>
           <div>
             <label className="text-sm font-medium text-foreground">{t('trainingType')}</label>
@@ -188,17 +194,17 @@ const PersonalTraining: React.FC = () => {
                     <Input placeholder={t('machineName')} value={ex.machineNumber} onChange={e => updateExercise(gi, ei, 'machineNumber', e.target.value)} className="text-sm" />
                     <Input placeholder={t('exerciseName')} value={ex.name} onChange={e => updateExercise(gi, ei, 'name', e.target.value)} className="text-sm" />
                   </div>
-                  
+
                   <div className="sm:col-span-5 h-full">
                     <VideoUpload videoUrl={ex.videoUrl} onChange={(val) => updateExercise(gi, ei, 'videoUrl', val)} />
                   </div>
-                  
+
                   <div className="sm:col-span-3 flex gap-1 h-full items-center">
                     <Input type="number" placeholder={t('sets')} value={ex.sets} onChange={e => updateExercise(gi, ei, 'sets', Number(e.target.value))} className="text-sm w-16" />
                     <span className="self-center text-muted-foreground">×</span>
                     <Input type="number" placeholder={t('reps')} value={ex.reps} onChange={e => updateExercise(gi, ei, 'reps', Number(e.target.value))} className="text-sm w-16" />
                   </div>
-                  
+
                   <div className="sm:col-span-1 h-full flex items-center justify-end">
                     <button onClick={() => removeExercise(gi, ei)} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
                       <Trash2 className="w-4 h-4" />
