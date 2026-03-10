@@ -7,8 +7,8 @@ progress_bp = Blueprint('progress', __name__)
 @progress_bp.route('/', methods=['GET'])
 def get_progress():
     user_id = request.args.get('userId')
-    if user_id:
-        entries = ProgressEntry.query.filter_by(user_id=user_id).all()
+    if user_id and user_id.isdigit():
+        entries = ProgressEntry.query.filter_by(user_id=int(user_id)).all()
     else:
         entries = ProgressEntry.query.all()
     return jsonify([p.to_dict() for p in entries]), 200
@@ -18,14 +18,14 @@ def create_progress():
     data = request.get_json()
     
     overwrite_id = request.args.get('overwriteId')
-    if overwrite_id:
-        entry = ProgressEntry.query.get(overwrite_id)
+    if overwrite_id and overwrite_id.isdigit():
+        entry = ProgressEntry.query.get(int(overwrite_id))
         if entry:
             db.session.delete(entry)
             db.session.commit()
             
     new_entry = ProgressEntry(
-        user_id=data['userId'],
+        user_id=int(data['userId']),
         date=data['date'],
         end_date=data.get('endDate'),
         weight=data.get('weight', ''),
