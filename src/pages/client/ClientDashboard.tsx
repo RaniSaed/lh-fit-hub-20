@@ -41,23 +41,37 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      progressService.getByUser(user.id).then(history => setProgressHistory(history));
-
-      trainingPlanService.getByUser(user.id).then(userPlans => {
+      Promise.all([
+        progressService.getByUser(user.id),
+        trainingPlanService.getByUser(user.id)
+      ]).then(([history, userPlans]) => {
+        setProgressHistory(history);
         setPlans(userPlans);
-        // Default to today or most recent plan if available
-        if (userPlans.length > 0) {
-            const todayStr = toDateStr(new Date());
-            const hasToday = userPlans.find(p => p.startDate === todayStr);
-            if (!hasToday) {
-                // Find most recent past date
-                const sorted = [...userPlans].sort((a, b) => {
-                  const dateA = parseDateStr(a.startDate).getTime();
-                  const dateB = parseDateStr(b.startDate).getTime();
-                  return dateB - dateA;
-                });
-                setSelectedDate(parseDateStr(sorted[0].startDate));
-            }
+
+        const todayStr = toDateStr(new Date());
+        const hasPlanToday = userPlans.find(p => p.startDate === todayStr);
+        const hasProgressToday = history.find(p => p.date === todayStr);
+
+        // Default to today if there is a plan or progress entry for today
+        if (hasPlanToday || hasProgressToday) {
+          setSelectedDate(new Date()); // Today
+        } else if (userPlans.length > 0 || history.length > 0) {
+          // Find most recent past date from both plans and progress history
+          const allDates = [
+            ...userPlans.map(p => p.startDate),
+            ...history.map(p => p.date)
+          ];
+
+          // Deduplicate and sort descending
+          const uniqueSortedDates = Array.from(new Set(allDates)).sort((a, b) => {
+            const dateA = parseDateStr(a).getTime();
+            const dateB = parseDateStr(b).getTime();
+            return dateB - dateA;
+          });
+
+          if (uniqueSortedDates.length > 0) {
+            setSelectedDate(parseDateStr(uniqueSortedDates[0]));
+          }
         }
       });
     }
@@ -65,17 +79,17 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     const targetStr = toDateStr(selectedDate);
-    
+
     // Workout Map
     const plan = plans.find(p => p.startDate === targetStr);
     setActivePlan(plan || null);
-    
+
     // Progress Map
     const prog = progressHistory.find(p => p.date === targetStr);
     setActiveProgress(prog || null);
-    
+
     if (plan) {
-        userService.getById(plan.assignedCoach).then(c => setCoachName(c?.username || ''));
+      userService.getById(plan.assignedCoach).then(c => setCoachName(c?.username || ''));
     }
   }, [selectedDate, plans, progressHistory]);
 
@@ -132,28 +146,27 @@ const ClientDashboard: React.FC = () => {
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         workoutDates={plans.map(p => p.startDate)}
+        progressDates={progressHistory.map(p => p.date)}
       />
 
       {/* View Tabs */}
       <div className="flex justify-center mt-6 mb-2 gap-3 px-4 max-w-3xl mx-auto overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('workout')}
-          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
-            activeTab === 'workout' 
-              ? 'bg-[#FF69B4] text-white shadow-md scale-105' 
+          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeTab === 'workout'
+              ? 'bg-[#FF69B4] text-white shadow-md scale-105'
               : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
-          }`}
+            }`}
         >
           <Dumbbell className="w-4 h-4" />
           {t('workoutPlan')}
         </button>
         <button
           onClick={() => setActiveTab('progress')}
-          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
-            activeTab === 'progress' 
-              ? 'bg-[#FF69B4] text-white shadow-md scale-105' 
+          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeTab === 'progress'
+              ? 'bg-[#FF69B4] text-white shadow-md scale-105'
               : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
-          }`}
+            }`}
         >
           <TrendingUp className="w-4 h-4" />
           {t('progressTracker')}
@@ -179,77 +192,77 @@ const ClientDashboard: React.FC = () => {
                   <p className="text-muted-foreground">{t('restDay')}</p>
                 </div>
               ) : (
-            <motion.div 
-              key={activePlan.id}
-              initial={{ opacity: 0, x: 30 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-display font-bold text-foreground">
-                    {t('todaysWorkout')}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Coach: <span className="text-foreground font-medium">{coachName}</span>
-                  </p>
-                </div>
-                <Button onClick={downloadPDF} variant="outline" className="border-primary text-primary hover:bg-primary/10">
-                  <Download className="w-4 h-4 mr-1" /> {t('downloadPDF')}
-                </Button>
-              </div>
-
-              {activePlan.muscleGroups.map((group, gi) => (
-                <div
-                  key={gi}
-                  className="bg-card border border-border rounded-xl overflow-hidden shadow-card"
+                <motion.div
+                  key={activePlan.id}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="space-y-4"
                 >
-                  <div className="px-5 py-3 gradient-pink">
-                    <h3 className="font-display font-semibold text-primary-foreground">{group.name}</h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-xl font-display font-bold text-foreground">
+                        {t('todaysWorkout')}
+                      </h1>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Coach: <span className="text-foreground font-medium">{coachName}</span>
+                      </p>
+                    </div>
+                    <Button onClick={downloadPDF} variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                      <Download className="w-4 h-4 mr-1" /> {t('downloadPDF')}
+                    </Button>
                   </div>
-                  <div className="p-4 space-y-3">
-                    {group.exercises.map(ex => (
-                      <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 border border-border">
-                        <VideoPlayer videoUrl={ex.videoUrl} exerciseName={ex.name} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground text-sm">{ex.name}</p>
-                          <p className="text-xs text-muted-foreground">Machine #{ex.machineNumber}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-semibold text-primary">{ex.sets}×{ex.reps}</span>
-                        </div>
+
+                  {activePlan.muscleGroups.map((group, gi) => (
+                    <div
+                      key={gi}
+                      className="bg-card border border-border rounded-xl overflow-hidden shadow-card"
+                    >
+                      <div className="px-5 py-3 gradient-pink">
+                        <h3 className="font-display font-semibold text-primary-foreground">{group.name}</h3>
                       </div>
-                    ))}
+                      <div className="p-4 space-y-3">
+                        {group.exercises.map(ex => (
+                          <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 border border-border">
+                            <VideoPlayer videoUrl={ex.videoUrl} exerciseName={ex.name} />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-foreground text-sm">{ex.name}</p>
+                              <p className="text-xs text-muted-foreground">Machine #{ex.machineNumber}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-semibold text-primary">{ex.sets}×{ex.reps}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Cardio */}
+                  <div className="bg-card border border-border rounded-xl p-5 shadow-card">
+                    <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full gradient-blue inline-block" />
+                      {t('cardio')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Start: {activePlan.cardio.startDuration} · End: {activePlan.cardio.endDuration}
+                      {activePlan.cardio.totalHours && ` · Total: ${activePlan.cardio.totalHours}`}
+                    </p>
                   </div>
-                </div>
-              ))}
 
-              {/* Cardio */}
-              <div className="bg-card border border-border rounded-xl p-5 shadow-card">
-                <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full gradient-blue inline-block" />
-                  {t('cardio')}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Start: {activePlan.cardio.startDuration} · End: {activePlan.cardio.endDuration}
-                  {activePlan.cardio.totalHours && ` · Total: ${activePlan.cardio.totalHours}`}
-                </p>
-              </div>
-
-              {activePlan.coachNotes && (
-                <div className="bg-card border border-border rounded-xl p-5 shadow-card">
-                  <h3 className="font-display font-semibold text-foreground mb-2">{t('coachNotes')}</h3>
-                  <p className="text-sm text-muted-foreground">{activePlan.coachNotes}</p>
-                </div>
+                  {activePlan.coachNotes && (
+                    <div className="bg-card border border-border rounded-xl p-5 shadow-card">
+                      <h3 className="font-display font-semibold text-foreground mb-2">{t('coachNotes')}</h3>
+                      <p className="text-sm text-muted-foreground">{activePlan.coachNotes}</p>
+                    </div>
+                  )}
+                </motion.div>
               )}
             </motion.div>
           )}
-        </motion.div>
-      )}
 
-      {activeTab === 'progress' && (
+          {activeTab === 'progress' && (
             <motion.div
               key="view-progress"
               initial={{ opacity: 0, x: 20 }}
@@ -300,7 +313,7 @@ const ClientDashboard: React.FC = () => {
                           <span className="text-xs text-muted-foreground mb-1">{t('lowerAbs')}</span>
                           <span className="text-lg font-semibold text-foreground">{activeProgress.lowerAbs || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
                         </div>
-                        
+
                         <div className="p-5 flex flex-col hover:bg-muted/10 transition-colors">
                           <span className="text-xs text-muted-foreground mb-1">{t('rightArm')}</span>
                           <span className="text-lg font-semibold text-foreground">{activeProgress.rightArm || '-'} <span className="text-xs font-normal text-muted-foreground">cm</span></span>
