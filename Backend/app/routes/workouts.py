@@ -7,8 +7,8 @@ workouts_bp = Blueprint('workouts', __name__)
 @workouts_bp.route('/', methods=['GET'])
 def get_workouts():
     user_id = request.args.get('userId')
-    if user_id:
-        plans = TrainingPlan.query.filter_by(assigned_to=user_id).all()
+    if user_id and user_id.isdigit():
+        plans = TrainingPlan.query.filter_by(assigned_to=int(user_id)).all()
     else:
         plans = TrainingPlan.query.all()
     return jsonify([p.to_dict() for p in plans]), 200
@@ -19,15 +19,19 @@ def create_workout():
     
     # Check for overwrite
     overwrite_id = request.args.get('overwriteId')
-    if overwrite_id:
-        plan = TrainingPlan.query.get(overwrite_id)
+    if overwrite_id and overwrite_id.isdigit():
+        plan = TrainingPlan.query.get(int(overwrite_id))
         if plan:
             db.session.delete(plan)
             db.session.commit()
             
+    assigned_coach = data.get('assignedCoach')
+    if not assigned_coach:
+        assigned_coach = None
+            
     new_plan = TrainingPlan(
-        assigned_to=data['assignedTo'],
-        assigned_coach=data['assignedCoach'],
+        assigned_to=int(data['assignedTo']),
+        assigned_coach=int(assigned_coach) if assigned_coach else None,
         start_date=data['startDate'],
         end_date=data.get('endDate'),
         type=data['type'],
@@ -40,12 +44,16 @@ def create_workout():
     for mg_data in data.get('muscleGroups', []):
         mg = MuscleGroup(name=mg_data['name'], name_he=mg_data.get('nameHe', ''))
         for ex_data in mg_data.get('exercises', []):
+            
+            raw_sets = str(ex_data.get('sets', ''))
+            raw_reps = str(ex_data.get('reps', ''))
+            
             ex = Exercise(
                 machine_number=ex_data.get('machineNumber', ''),
                 name=ex_data['name'],
                 video_url=ex_data.get('videoUrl', ''),
-                sets=ex_data.get('sets', 3),
-                reps=ex_data.get('reps', 12)
+                sets=int(raw_sets) if raw_sets.isdigit() else 3,
+                reps=int(raw_reps) if raw_reps.isdigit() else 12
             )
             mg.exercises.append(ex)
         new_plan.muscle_groups.append(mg)

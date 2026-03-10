@@ -6,7 +6,7 @@ class TrainingPlan(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    assigned_coach = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    assigned_coach = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     start_date = db.Column(db.String(20), nullable=False)
     end_date = db.Column(db.String(20), nullable=True)
