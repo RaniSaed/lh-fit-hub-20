@@ -34,6 +34,7 @@ export interface TrainingPlan {
   assignedTo: string;
   assignedCoach: string;
   startDate: string;
+  endDate?: string;
   type: 'fullbody' | 'upper_lower';
   muscleGroups: MuscleGroup[];
   cardio: CardioConfig;
@@ -45,6 +46,7 @@ export interface ProgressEntry {
   id: string;
   userId: string;
   date: string;
+  endDate?: string;
   weight: string;
   fatPercent: string;
   upperAbs: string;
@@ -85,27 +87,40 @@ const mockTrainingPlans: TrainingPlan[] = [
     assignedTo: '3',
     assignedCoach: '2',
     startDate: '2024-06-01',
+    endDate: '2024-06-30',
     type: 'fullbody',
     muscleGroups: [
-      { name: 'Chest', exercises: [
-        { id: 'e1', machineNumber: '12', name: 'Bench Press', videoUrl: '', sets: 4, reps: 12 },
-        { id: 'e2', machineNumber: '14', name: 'Chest Fly', videoUrl: '', sets: 3, reps: 15 },
-      ]},
-      { name: 'Back', exercises: [
-        { id: 'e3', machineNumber: '8', name: 'Lat Pulldown', videoUrl: '', sets: 4, reps: 10 },
-      ]},
-      { name: 'Shoulders', exercises: [
-        { id: 'e4', machineNumber: '6', name: 'Shoulder Press', videoUrl: '', sets: 3, reps: 12 },
-      ]},
-      { name: 'Arms', exercises: [
-        { id: 'e5', machineNumber: '22', name: 'Bicep Curl', videoUrl: '', sets: 3, reps: 15 },
-      ]},
-      { name: 'Abs', exercises: [
-        { id: 'e6', machineNumber: '-', name: 'Crunches', videoUrl: '', sets: 3, reps: 20 },
-      ]},
-      { name: 'Legs', exercises: [
-        { id: 'e7', machineNumber: '30', name: 'Leg Press', videoUrl: '', sets: 4, reps: 12 },
-      ]},
+      {
+        name: 'Chest', exercises: [
+          { id: 'e1', machineNumber: '12', name: 'Bench Press', videoUrl: '', sets: 4, reps: 12 },
+          { id: 'e2', machineNumber: '14', name: 'Chest Fly', videoUrl: '', sets: 3, reps: 15 },
+        ]
+      },
+      {
+        name: 'Back', exercises: [
+          { id: 'e3', machineNumber: '8', name: 'Lat Pulldown', videoUrl: '', sets: 4, reps: 10 },
+        ]
+      },
+      {
+        name: 'Shoulders', exercises: [
+          { id: 'e4', machineNumber: '6', name: 'Shoulder Press', videoUrl: '', sets: 3, reps: 12 },
+        ]
+      },
+      {
+        name: 'Arms', exercises: [
+          { id: 'e5', machineNumber: '22', name: 'Bicep Curl', videoUrl: '', sets: 3, reps: 15 },
+        ]
+      },
+      {
+        name: 'Abs', exercises: [
+          { id: 'e6', machineNumber: '-', name: 'Crunches', videoUrl: '', sets: 3, reps: 20 },
+        ]
+      },
+      {
+        name: 'Legs', exercises: [
+          { id: 'e7', machineNumber: '30', name: 'Leg Press', videoUrl: '', sets: 4, reps: 12 },
+        ]
+      },
     ],
     cardio: { startDuration: '10-15 min', endDuration: '20-30 min' },
     coachNotes: 'Focus on form, avoid heavy weights on back exercises due to medical condition.',
@@ -114,8 +129,8 @@ const mockTrainingPlans: TrainingPlan[] = [
 ];
 
 const mockProgress: ProgressEntry[] = [
-  { id: 'p1', userId: '3', date: '2024-06-01', weight: '85', fatPercent: '22', upperAbs: '90', midAbs: '88', lowerAbs: '92', rightArm: '35', leftArm: '34', rightThigh: '58', leftThigh: '57', glutes: '100', chest: '105' },
-  { id: 'p2', userId: '3', date: '2024-07-01', weight: '83', fatPercent: '20', upperAbs: '88', midAbs: '86', lowerAbs: '90', rightArm: '36', leftArm: '35', rightThigh: '57', leftThigh: '56', glutes: '99', chest: '104' },
+  { id: 'p1', userId: '3', date: '2024-06-01', endDate: '2024-06-30', weight: '85', fatPercent: '22', upperAbs: '90', midAbs: '88', lowerAbs: '92', rightArm: '35', leftArm: '34', rightThigh: '58', leftThigh: '57', glutes: '100', chest: '105' },
+  { id: 'p2', userId: '3', date: '2024-07-01', endDate: '', weight: '83', fatPercent: '20', upperAbs: '88', midAbs: '86', lowerAbs: '90', rightArm: '36', leftArm: '35', rightThigh: '57', leftThigh: '56', glutes: '99', chest: '104' },
 ];
 
 // Helper functions for localStorage
@@ -188,11 +203,11 @@ export const userService = {
     return users.filter(u => u.role === 'coach' || u.role === 'superadmin');
   },
   add: async (user: Omit<User, 'id' | 'createdAt' | 'role'> & { role?: User['role'] }): Promise<User> => {
-    const newUser: User = { 
-      ...user, 
-      id: String(Date.now()), 
+    const newUser: User = {
+      ...user,
+      id: String(Date.now()),
       role: user.role || 'client',
-      createdAt: new Date().toISOString().split('T')[0] 
+      createdAt: new Date().toISOString().split('T')[0]
     };
     users.push(newUser);
     saveData('lh_users', users);
