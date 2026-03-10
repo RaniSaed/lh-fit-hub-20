@@ -44,9 +44,12 @@ const ProgressTracker: React.FC = () => {
 
   const handleAddRow = async () => {
     if (!selectedUser) return;
+    const now = new Date();
+    const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     const entry = await progressService.addEntry({
       userId: selectedUser,
-      date: newRow.date || new Date().toISOString().split('T')[0],
+      date: newRow.date || localDateStr,
       weight: newRow.weight || '',
       fatPercent: newRow.fatPercent || '',
       upperAbs: newRow.upperAbs || '',
