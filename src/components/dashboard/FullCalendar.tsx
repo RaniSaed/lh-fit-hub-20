@@ -89,40 +89,40 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ selectedDate, onSelectDate,
     ];
 
     return (
-        <div className="w-full bg-card border-b border-border py-6 px-4">
+        <div className="w-full glass border-b border-border/50 py-8 px-4 md:px-8 shadow-sm relative z-0">
             <div className="max-w-3xl mx-auto">
                 {/* Header navigation */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-8">
                     <button
                         onClick={prevMonth}
-                        className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-2.5 rounded-full glass hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all duration-300 shadow-sm"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
 
-                    <h2 className="text-xl font-display font-bold text-foreground">
+                    <h2 className="text-2xl font-display font-bold text-foreground tracking-tight">
                         {monthNames[month]} {year}
                     </h2>
 
                     <button
                         onClick={nextMonth}
-                        className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-2.5 rounded-full glass hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all duration-300 shadow-sm"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Days of Week Header */}
-                <div className="grid grid-cols-7 gap-1 mb-2">
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3">
                     {enDays.map((day, i) => (
-                        <div key={i} className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-1">
+                        <div key={i} className="text-center text-[11px] font-bold text-muted-foreground uppercase tracking-widest py-2">
                             {t(day)}
                         </div>
                     ))}
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
                     {calendarDays.map((item, i) => {
                         const { date, isCurrentMonth } = item;
                         const isActive = isSameDay(date, selectedDate);
@@ -135,15 +135,16 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ selectedDate, onSelectDate,
                             <motion.button
                                 key={i}
                                 onClick={() => onSelectDate(date)}
+                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className={`
-                  relative flex flex-col items-center justify-center p-2 h-[4.5rem] rounded-xl transition-all border
-                  ${!isCurrentMonth ? 'opacity-40' : 'opacity-100'}
+                  relative flex flex-col items-center justify-center p-2 h-[4.5rem] sm:h-20 rounded-2xl transition-all duration-300 border
+                  ${!isCurrentMonth ? 'opacity-30' : 'opacity-100'}
                   ${isActive
-                                        ? 'bg-[#FF69B4] text-white border-transparent shadow-[0_4px_14px_0_rgba(255,105,180,0.39)]'
+                                        ? 'gradient-pink text-white border-transparent shadow-pink drop-shadow-md z-10'
                                         : todayMarker
                                             ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
-                                            : 'bg-transparent text-foreground border-transparent hover:bg-muted/50'
+                                            : 'bg-card/50 text-foreground border-transparent hover:bg-foreground/5 hover:shadow-sm'
                                     }
                 `}
                             >

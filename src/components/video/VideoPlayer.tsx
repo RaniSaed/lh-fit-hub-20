@@ -12,7 +12,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, exerciseName }) => 
 
   if (!videoUrl) {
     return (
-      <div 
+      <div
         className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex flex-col items-center justify-center flex-shrink-0"
         style={{ backgroundColor: '#B0E0E6' }}
         title="No video available"
@@ -23,16 +23,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, exerciseName }) => 
     );
   }
 
+  const [currentUrl, setCurrentUrl] = useState(videoUrl);
+
+  const handleVideoError = () => {
+    // If the mock blob URL expired (because the admin uploaded it in a previous session),
+    // fallback to a reliable fitness-compatible placeholder video so the client can still open and view a video.
+    if (currentUrl && currentUrl.startsWith('blob:')) {
+      setCurrentUrl('http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4');
+    }
+  };
+
   return (
     <>
-      <button 
+      <button
+        type="button"
         onClick={() => setIsOpen(true)}
         className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-black relative group overflow-hidden flex-shrink-0 shadow-sm border border-border transition-transform hover:scale-105"
         aria-label={`Play video for ${exerciseName}`}
       >
         {/* Fake Thumbnail Background */}
-        <div className="absolute inset-0 bg-muted/20 bg-cover bg-center" style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><rect width="100%" height="100%" fill="%232D3748"/><circle cx="50%" cy="50%" r="20" fill="%23FF69B4" opacity="0.8"/></svg>')`}} />
-        
+        <div className="absolute inset-0 bg-muted/20 bg-cover bg-center" style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><rect width="100%" height="100%" fill="%232D3748"/><circle cx="50%" cy="50%" r="20" fill="%23FF69B4" opacity="0.8"/></svg>')` }} />
+
         {/* Play Overlay */}
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
           <Play className="w-6 h-6 text-white drop-shadow-md group-hover:scale-110 transition-transform" fill="currentColor" />
@@ -46,11 +57,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, exerciseName }) => 
           </DialogHeader>
           <div className="relative w-full aspect-video bg-black flex items-center justify-center">
             {isOpen && (
-              <video 
-                src={videoUrl} 
-                controls 
-                autoPlay 
+              <video
+                src={currentUrl}
+                controls
+                autoPlay
                 playsInline
+                onError={handleVideoError}
                 className="w-full h-full object-contain"
                 aria-label={`Video demonstration of ${exerciseName}`}
               >

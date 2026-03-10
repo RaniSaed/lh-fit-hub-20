@@ -4,6 +4,7 @@ import { userService, progressService, type User, type ProgressEntry } from '@/s
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
+import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -32,6 +33,11 @@ const ProgressTracker: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newRow, setNewRow] = useState<Record<string, string>>({});
   const [showAdd, setShowAdd] = useState(false);
+  const [showOverwriteModal, setShowOverwriteModal] = useState(false);
+  const [existingProgressId, setExistingProgressId] = useState<string | null>(null);
+
+  const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+  const targetDate = newRow.date || todayStr;
 
   useEffect(() => { userService.getAll().then(setClients); }, []);
 
@@ -43,14 +49,25 @@ const ProgressTracker: React.FC = () => {
 
   const filteredClients = clients.filter(c => c.username.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const handleAddRow = async () => {
+  const handlePreSubmit = async () => {
     if (!selectedUser) return;
-    const now = new Date();
-    const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
+    const existing = await progressService.getByUser(selectedUser);
+    const overlapping = existing.find(p => p.date === targetDate);
+
+    if (overlapping) {
+      setExistingProgressId(overlapping.id);
+      setShowOverwriteModal(true);
+      return;
+    }
+
+    await executeSubmit();
+  };
+
+  const executeSubmit = async (overwriteId?: string) => {
     const entry = await progressService.addEntry({
       userId: selectedUser,
-      date: newRow.date || localDateStr,
+      date: targetDate,
       endDate: newRow.endDate || undefined,
       weight: newRow.weight || '',
       fatPercent: newRow.fatPercent || '',
@@ -63,10 +80,18 @@ const ProgressTracker: React.FC = () => {
       leftThigh: newRow.leftThigh || '',
       glutes: newRow.glutes || '',
       chest: newRow.chest || '',
-    });
-    setEntries([...entries, entry]);
+    }, overwriteId);
+
+    if (overwriteId) {
+      setEntries(entries.map(e => e.id === overwriteId ? entry : e));
+    } else {
+      setEntries([...entries, entry]);
+    }
+
     setNewRow({});
     setShowAdd(false);
+    setShowOverwriteModal(false);
+    setExistingProgressId(null);
     toast.success('Entry saved!');
   };
 
@@ -89,7 +114,7 @@ const ProgressTracker: React.FC = () => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto">
       <h1 className="text-2xl font-display font-bold text-foreground mb-6">{t('progressTracker')}</h1>
 
-      <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-card">
+      <div className="glass rounded-3xl p-6 sm:p-8 mb-6 shadow-card border-border/40">
         <label className="text-sm font-medium text-foreground">{t('selectUser')}</label>
         <Input placeholder={t('search')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="mt-2 mb-2" />
         {searchQuery && !selectedUser && (
@@ -106,7 +131,7 @@ const ProgressTracker: React.FC = () => {
 
       {selectedUser && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="overflow-x-auto bg-card border border-border rounded-xl shadow-card">
+          <div className="overflow-x-auto glass rounded-3xl shadow-card border-border/40 scrollbar-hide">
             <table className="w-full text-sm" dir="rtl">
               <thead>
                 <tr className="border-b border-border">
@@ -128,7 +153,7 @@ const ProgressTracker: React.FC = () => {
           </div>
 
           {showAdd && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card border border-border rounded-xl p-4 mt-4 shadow-card">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-3xl p-6 sm:p-8 mt-6 shadow-card border-border/40">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {columns.map(c => (
                   <div key={c.key}>
@@ -143,7 +168,7 @@ const ProgressTracker: React.FC = () => {
                 ))}
               </div>
               <div className="flex gap-2 mt-4">
-                <Button onClick={handleAddRow} className="gradient-pink text-primary-foreground shadow-pink">{t('save')}</Button>
+                <Button onClick={handlePreSubmit} className="gradient-pink text-primary-foreground shadow-pink">{t('save')}</Button>
                 <Button variant="outline" onClick={() => setShowAdd(false)}>{t('cancel')}</Button>
               </div>
             </motion.div>
@@ -153,6 +178,25 @@ const ProgressTracker: React.FC = () => {
             <Button onClick={() => setShowAdd(true)} className="gradient-pink text-primary-foreground shadow-pink">{t('addRow')}</Button>
             <Button variant="outline" onClick={exportPDF} className="border-secondary text-secondary-foreground">{t('exportPDF')}</Button>
           </div>
+
+          {/* Overwrite Confirmation Modal */}
+          {showOverwriteModal && (
+            <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4" onClick={() => setShowOverwriteModal(false)}>
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass border border-border/40 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+                <div className="w-16 h-16 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-8 h-8" />
+                </div>
+                <h3 className="font-display font-bold text-foreground text-xl mb-2">Be Careful!</h3>
+                <p className="text-muted-foreground text-sm mb-6">
+                  You are about to override a progress tracker entry that already exists on <strong className="text-foreground">{targetDate}</strong> for this user. Are you sure you want to replace it?
+                </p>
+                <div className="flex gap-3 grid-cols-2 w-full">
+                  <Button onClick={() => setShowOverwriteModal(false)} variant="outline" className="flex-1 rounded-xl">No</Button>
+                  <Button onClick={() => executeSubmit(existingProgressId || undefined)} className="flex-1 gradient-pink text-white shadow-pink rounded-xl">Yes, Replace</Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </motion.div>
       )}
     </motion.div>
