@@ -41,7 +41,7 @@ const CircularMetricCard = ({
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     return (
-        <div className="bg-card border border-border rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center hover:bg-muted/10 transition-colors relative overflow-hidden group">
+        <div className="glass rounded-3xl p-5 shadow-sm flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 relative overflow-hidden group border border-border/40">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
             {/* SVG Ring */}
@@ -152,7 +152,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
     return (
         <div className="space-y-6 mt-2">
             {/* Action Header */}
-            <div className="flex justify-between items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+            <div className="flex justify-between items-center glass p-5 rounded-3xl border border-border/40 shadow-md">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[#FF69B4]/10 flex items-center justify-center">
                         <BarChart2 className="w-5 h-5 text-[#FF69B4]" />
@@ -165,7 +165,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                 <Button
                     onClick={handleDownloadPDF}
                     disabled={isDownloading}
-                    className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all font-medium"
+                    className="gradient-pink text-white shadow-pink hover:opacity-90 border-transparent transition-all font-bold"
                 >
                     <Download className="w-4 h-4 mr-2" />
                     {isDownloading ? 'Generating...' : 'Download PDF'}
@@ -185,7 +185,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                     {/* Top KPIs: Weight & Body Fat as Large Rings */}
                     <div className="grid grid-cols-2 gap-4 md:gap-6">
                         {/* Weight Ring */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center hover:bg-muted/10 transition-colors relative overflow-hidden group">
+                        <div className="glass rounded-3xl p-6 shadow-md flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 relative overflow-hidden group border border-border/40">
                             <div className="absolute inset-0 bg-gradient-to-br from-[#8884d8]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative w-32 h-32 mb-4">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -211,7 +211,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                         </div>
 
                         {/* Body Fat Ring */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center hover:bg-muted/10 transition-colors relative overflow-hidden group">
+                        <div className="glass rounded-3xl p-6 shadow-md flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 relative overflow-hidden group border border-border/40">
                             <div className="absolute inset-0 bg-gradient-to-br from-[#FF69B4]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative w-32 h-32 mb-4">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -256,7 +256,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
 
                 {/* Centralized Full Body Symmetry Polygon */}
                 <div className="mt-8 print:hidden">
-                    <div className="bg-card border border-border rounded-3xl p-6 shadow-lg flex flex-col items-center relative overflow-hidden group">
+                    <div className="glass rounded-[40px] p-6 md:p-10 shadow-xl flex flex-col items-center relative overflow-hidden group border border-border/30">
                         <div className="absolute inset-0 bg-gradient-to-tr from-[#8884d8]/5 via-transparent to-[#FF69B4]/5 pointer-events-none" />
 
                         <div className="text-center mb-6 z-10">

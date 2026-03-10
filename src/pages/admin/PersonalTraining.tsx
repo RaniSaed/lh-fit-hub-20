@@ -39,6 +39,8 @@ const PersonalTraining: React.FC = () => {
   const [assignedCoach, setAssignedCoach] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showMedicalModal, setShowMedicalModal] = useState(false);
+  const [showOverwriteModal, setShowOverwriteModal] = useState(false);
+  const [existingPlanId, setExistingPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     userService.getAll().then(setClients);
@@ -74,8 +76,22 @@ const PersonalTraining: React.FC = () => {
     setMuscleGroups(updated);
   };
 
-  const handleSubmit = async () => {
+  const handlePreSubmit = async () => {
     if (!selectedUser || !startDate) { toast.error('Please select a user and start date'); return; }
+
+    const existing = await trainingPlanService.getByUser(selectedUser);
+    const overlapping = existing.find(p => p.startDate === startDate);
+
+    if (overlapping) {
+      setExistingPlanId(overlapping.id);
+      setShowOverwriteModal(true);
+      return;
+    }
+
+    await executeSubmit();
+  };
+
+  const executeSubmit = async (overwriteId?: string) => {
     await trainingPlanService.create({
       assignedTo: selectedUser,
       assignedCoach: assignedCoach,
@@ -85,8 +101,10 @@ const PersonalTraining: React.FC = () => {
       muscleGroups,
       cardio: { startDuration: cardioStart, endDuration: cardioEnd, totalHours: cardioTotal },
       coachNotes,
-    });
-    toast.success('Training plan created!');
+    }, overwriteId);
+    toast.success('Training plan saved!');
+    setShowOverwriteModal(false);
+    setExistingPlanId(null);
   };
 
   const filteredClients = clients.filter(c => c.username.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -96,7 +114,7 @@ const PersonalTraining: React.FC = () => {
       <h1 className="text-2xl font-display font-bold text-foreground mb-6">{t('personalTraining')}</h1>
 
       {/* User Selection */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-card">
+      <div className="glass rounded-3xl p-6 sm:p-8 mb-6 shadow-card">
         <label className="text-sm font-medium text-foreground">{t('selectUser')}</label>
         <Input
           placeholder={t('search')}
@@ -267,9 +285,28 @@ const PersonalTraining: React.FC = () => {
         </div>
       </div>
 
-      <Button onClick={handleSubmit} className="gradient-pink text-primary-foreground shadow-pink hover:opacity-90 w-full sm:w-auto px-8 py-3">
+      <Button onClick={handlePreSubmit} className="gradient-pink text-primary-foreground shadow-pink hover:opacity-90 w-full sm:w-auto px-8 py-3">
         {t('createPlan')}
       </Button>
+
+      {/* Overwrite Confirmation Modal */}
+      {showOverwriteModal && (
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4" onClick={() => setShowOverwriteModal(false)}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass border border-border/40 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h3 className="font-display font-bold text-foreground text-xl mb-2">Be Careful!</h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              You are about to override a training plan that already exists on <strong className="text-foreground">{startDate}</strong> for this user. Are you sure you want to replace it?
+            </p>
+            <div className="flex gap-3 grid-cols-2 w-full">
+              <Button onClick={() => setShowOverwriteModal(false)} variant="outline" className="flex-1 rounded-xl">No</Button>
+              <Button onClick={() => executeSubmit(existingPlanId || undefined)} className="flex-1 gradient-pink text-white shadow-pink rounded-xl">Yes, Replace</Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 };

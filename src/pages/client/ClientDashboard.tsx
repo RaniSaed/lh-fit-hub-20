@@ -147,14 +147,15 @@ const ClientDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="flex items-center justify-between p-4 border-b border-border bg-card">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
+      {/* Premium Sticky Glass Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 glass-header">
         <LHLogo size="sm" />
-        <div className="flex items-center gap-2">
-          <button onClick={toggleLang} className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+        <div className="flex items-center gap-3">
+          <button onClick={toggleLang} className="p-2.5 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-all duration-300">
             <Languages className="w-5 h-5" />
           </button>
-          <button onClick={handleLogout} className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={handleLogout} className="p-2.5 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300">
             <LogOut className="w-5 h-5" />
           </button>
         </div>
@@ -167,28 +168,30 @@ const ClientDashboard: React.FC = () => {
         progressDates={progressHistory.flatMap(p => getDatesInRange(p.date, p.endDate))}
       />
 
-      {/* View Tabs */}
-      <div className="flex justify-center mt-6 mb-2 gap-3 px-4 max-w-3xl mx-auto overflow-x-auto scrollbar-hide">
-        <button
-          onClick={() => setActiveTab('workout')}
-          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeTab === 'workout'
-            ? 'bg-[#FF69B4] text-white shadow-md scale-105'
-            : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
-            }`}
-        >
-          <Dumbbell className="w-4 h-4" />
-          {t('workoutPlan')}
-        </button>
-        <button
-          onClick={() => setActiveTab('progress')}
-          className={`flex-shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeTab === 'progress'
-            ? 'bg-[#FF69B4] text-white shadow-md scale-105'
-            : 'bg-card border border-border text-muted-foreground hover:bg-[#B0E0E6]/10 hover:border-[#B0E0E6] hover:text-[#B0E0E6]'
-            }`}
-        >
-          <TrendingUp className="w-4 h-4" />
-          {t('progressTracker')}
-        </button>
+      {/* Floating Segmented View Tabs */}
+      <div className="flex justify-center mt-8 mb-4 gap-4 px-4 max-w-3xl mx-auto overflow-x-auto scrollbar-hide relative z-10">
+        <div className="glass p-1.5 rounded-full flex gap-2 w-full max-w-sm ml-auto mr-auto border border-border/40 shadow-xl">
+          <button
+            onClick={() => setActiveTab('workout')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all duration-500 ease-in-out ${activeTab === 'workout'
+              ? 'gradient-pink text-primary-foreground shadow-pink scale-[1.02]'
+              : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+              }`}
+          >
+            <Dumbbell className="w-4 h-4" />
+            {t('workoutPlan')}
+          </button>
+          <button
+            onClick={() => setActiveTab('progress')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all duration-500 ease-in-out ${activeTab === 'progress'
+              ? 'gradient-blue text-primary-foreground shadow-blue scale-[1.02]'
+              : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+              }`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            {t('progressTracker')}
+          </button>
+        </div>
       </div>
 
       <main className="max-w-3xl mx-auto p-4 md:px-8 pb-12 overflow-hidden">

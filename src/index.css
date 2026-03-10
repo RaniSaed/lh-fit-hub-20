@@ -6,63 +6,90 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    /* Ultra-clean Light Mode Palette (Apple/Stripe Inspired) */
+    --background: 210 50% 98%;      /* Very soft cool white/gray background */
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-    --primary: 330 100% 71%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Vibrant Premium Accents */
+    --primary: 330 85% 60%;         /* More saturated, energetic Hot Pink */
     --primary-foreground: 0 0% 100%;
-    --secondary: 195 53% 79%;
-    --secondary-foreground: 0 0% 10%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 195 53% 79%;
-    --accent-foreground: 0 0% 10%;
+    --secondary: 200 80% 60%;       /* Bright, clear neon Cyan/Blue */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 330 100% 71%;
-    --radius: 0.75rem;
+    
+    /* Elegant Borders & Inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 330 85% 60%;
+    --radius: 1rem; /* More modern, softer rounded corners */
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 330 100% 71%;
+    /* Dedicated Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 330 85% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 330 100% 71%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 330 85% 60%;
 
-    --gradient-pink: linear-gradient(135deg, hsl(330, 100%, 71%), hsl(340, 100%, 65%));
-    --gradient-blue: linear-gradient(135deg, hsl(195, 53%, 79%), hsl(200, 60%, 70%));
-    --gradient-dark: linear-gradient(135deg, hsl(0, 0%, 10%), hsl(0, 0%, 15%));
-    --shadow-pink: 0 4px 20px -4px hsla(330, 100%, 71%, 0.4);
-    --shadow-card: 0 4px 24px -8px hsla(0, 0%, 0%, 0.08);
+    /* Advanced Premium Effects */
+    --gradient-pink: linear-gradient(135deg, hsl(330, 85%, 60%), hsl(340, 90%, 55%));
+    --gradient-blue: linear-gradient(135deg, hsl(200, 80%, 60%), hsl(210, 85%, 55%));
+    --gradient-dark: linear-gradient(135deg, hsl(222, 47%, 14%), hsl(222, 47%, 9%));
+    --shadow-pink: 0 10px 40px -10px hsla(330, 85%, 60%, 0.5);
+    --shadow-blue: 0 10px 40px -10px hsla(200, 80%, 60%, 0.5);
+    --shadow-card: 0 8px 30px -4px hsla(222, 47%, 11%, 0.05), 0 4px 10px -2px hsla(222, 47%, 11%, 0.02);
+    --shadow-glass: inset 0 1px 1px hsla(0, 0%, 100%, 0.4), 0 8px 32px 0 hsla(222, 47%, 11%, 0.03);
   }
 
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 330 100% 71%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 195 53% 79%;
-    --secondary-foreground: 0 0% 10%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 95%;
+    /* Deep Luxury Dark Mode (Linear/Vercel Inspired) */
+    --background: 222 47% 4%;       /* Extremely deep, rich slate blue/black */
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;             /* Slightly elevated from background */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Intense Glowing Accents */
+    --primary: 330 90% 65%;
+    --primary-foreground: 222 47% 4%;
+    --secondary: 200 90% 65%;
+    --secondary-foreground: 222 47% 4%;
+    --muted: 222 47% 11%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 222 47% 11%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 330 100% 71%;
+    
+    /* Subdued Edges */
+    --border: 222 47% 12%;
+    --input: 222 47% 12%;
+    --ring: 330 90% 65%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 330 90% 65%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 222 47% 11%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 12%;
+    --sidebar-ring: 330 90% 65%;
+
+    /* Modified Ambient Glows for Dark Mode */
+    --shadow-card: 0 8px 40px -8px hsla(0,0%,0%,0.6), inset 0 1px 0 hsla(0,0%,100%,0.05);
+    --shadow-glass: inset 0 1px 1px hsla(0,0%,100%,0.05), inset 0 0 20px hsla(0,0%,100%,0.02), 0 8px 32px 0 hsla(0,0%,0%,0.5);
   }
 }
 
@@ -89,6 +116,9 @@
   .shadow-pink {
     box-shadow: var(--shadow-pink);
   }
+  .shadow-blue {
+    box-shadow: var(--shadow-blue);
+  }
   .shadow-card {
     box-shadow: var(--shadow-card);
   }
@@ -97,6 +127,26 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  .text-gradient-blue {
+    background: var(--gradient-blue);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Premium Glassmorphism Utility */
+  .glass {
+    background: hsla(var(--card), 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsla(var(--border), 0.5);
+    box-shadow: var(--shadow-glass);
+  }
+  .glass-header {
+    background: hsla(var(--background), 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid hsla(var(--border), 0.5);
   }
 }
 

@@ -266,7 +266,15 @@ export const trainingPlanService = {
     await new Promise(r => setTimeout(r, 300));
     return trainingPlans.filter(tp => tp.assignedTo === userId);
   },
-  create: async (plan: Omit<TrainingPlan, 'id' | 'createdAt'>): Promise<TrainingPlan> => {
+  create: async (plan: Omit<TrainingPlan, 'id' | 'createdAt'>, overwriteId?: string): Promise<TrainingPlan> => {
+    if (overwriteId) {
+      const idx = trainingPlans.findIndex(p => p.id === overwriteId);
+      if (idx !== -1) {
+        trainingPlans[idx] = { ...plan, id: overwriteId, createdAt: trainingPlans[idx].createdAt };
+        saveData('lh_plans', trainingPlans);
+        return trainingPlans[idx];
+      }
+    }
     const newPlan: TrainingPlan = { ...plan, id: String(Date.now()), createdAt: new Date().toISOString().split('T')[0] };
     trainingPlans.push(newPlan);
     saveData('lh_plans', trainingPlans);
@@ -279,7 +287,15 @@ export const progressService = {
     await new Promise(r => setTimeout(r, 300));
     return progress.filter(p => p.userId === userId);
   },
-  addEntry: async (entry: Omit<ProgressEntry, 'id'>): Promise<ProgressEntry> => {
+  addEntry: async (entry: Omit<ProgressEntry, 'id'>, overwriteId?: string): Promise<ProgressEntry> => {
+    if (overwriteId) {
+      const idx = progress.findIndex(p => p.id === overwriteId);
+      if (idx !== -1) {
+        progress[idx] = { ...entry, id: overwriteId };
+        saveData('lh_progress', progress);
+        return progress[idx];
+      }
+    }
     const newEntry: ProgressEntry = { ...entry, id: String(Date.now()) };
     progress.push(newEntry);
     saveData('lh_progress', progress);
