@@ -4,7 +4,7 @@ import { userService, progressService, type User } from '@/services/mockData';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Trash2, Edit2, UserPlus } from 'lucide-react';
+import { TrendingUp, Trash2, Edit2, UserPlus, KeyRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -24,6 +24,7 @@ const UsersManagement: React.FC = () => {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [formUsername, setFormUsername] = useState('');
@@ -78,6 +79,16 @@ const UsersManagement: React.FC = () => {
     fetchUsers();
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    await userService.update(selectedUser.id, {
+      password: formPassword
+    });
+    setIsResetPasswordOpen(false);
+    setFormPassword('');
+  };
+
   const openEditModal = (user: User) => {
     setSelectedUser(user);
     setFormPhone(user.phone);
@@ -89,6 +100,12 @@ const UsersManagement: React.FC = () => {
   const openDeleteModal = (user: User) => {
     setSelectedUser(user);
     setIsDeleteUserOpen(true);
+  };
+
+  const openResetPasswordModal = (user: User) => {
+    setSelectedUser(user);
+    setFormPassword('');
+    setIsResetPasswordOpen(true);
   };
 
   const filtered = users.filter(u => u.username.toLowerCase().includes(search.toLowerCase()));
@@ -134,10 +151,13 @@ const UsersManagement: React.FC = () => {
                 {isSuperadmin && (
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openEditModal(user)}>
+                      <Button variant="ghost" size="icon" onClick={() => openResetPasswordModal(user)} title="Force Reset Password">
+                        <KeyRound className="w-4 h-4 text-emerald-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEditModal(user)} title="Edit User">
                         <Edit2 className="w-4 h-4 text-blue-500" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openDeleteModal(user)}>
+                      <Button variant="ghost" size="icon" onClick={() => openDeleteModal(user)} title="Delete User">
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
                     </div>
@@ -231,6 +251,26 @@ const UsersManagement: React.FC = () => {
             <Button variant="outline" onClick={() => setIsDeleteUserOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleDeleteUser}>Delete</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Force Reset Password Modal */}
+      <Dialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Force Reset Password: {selectedUser?.username}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input required type="password" value={formPassword} onChange={e => setFormPassword(e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-1">This will permanently overwrite the user's password.</p>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsResetPasswordOpen(false)}>Cancel</Button>
+              <Button type="submit">Update Password</Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </motion.div>
