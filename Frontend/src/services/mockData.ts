@@ -161,15 +161,13 @@ export const authService = {
       return null;
     }
   },
-  signup: async (username: string, phone: string, password: string): Promise<User> => {
-    const res = await fetch(`${API_URL}/auth/signup`, {
+  changePassword: async (oldPass: string, newPass: string): Promise<boolean> => {
+    const res = await fetch(`${API_URL}/auth/change-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, phone, password })
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ old_password: oldPass, new_password: newPass })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Signup failed');
-    return data;
+    return res.ok;
   },
 };
 

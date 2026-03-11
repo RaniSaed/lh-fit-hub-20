@@ -5,7 +5,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<User | null>;
-  signup: (username: string, phone: string, password: string) => Promise<User>;
+  changePassword: (oldPass: string, newPass: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -26,21 +26,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signup = useCallback(async (username: string, phone: string, password: string) => {
+  const changePassword = useCallback(async (oldPass: string, newPass: string) => {
     setLoading(true);
     try {
-      const u = await authService.signup(username, phone, password);
-      setUser(u);
-      return u;
+      if (!user) return false;
+      const success = await authService.changePassword(oldPass, newPass);
+      return success;
+    } catch {
+      return false;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const logout = useCallback(() => setUser(null), []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, changePassword, logout }}>
       {children}
     </AuthContext.Provider>
   );

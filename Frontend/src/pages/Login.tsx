@@ -9,11 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Shield, Languages } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login, signup, loading } = useAuth();
+  const { login, loading } = useAuth();
   const { t, toggleLang } = useLanguage();
   const navigate = useNavigate();
   const [role, setRole] = useState<'client' | 'admin' | null>(null);
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -23,17 +22,11 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (mode === 'signup') {
-      if (!username || !phone || !password) { setError('All fields are required'); return; }
-      const user = await signup(username, phone, password);
-      if (user) navigate('/client/dashboard');
-    } else {
-      const user = await login(username, password);
-      if (!user) { setError('Invalid credentials'); return; }
-      if (role === 'admin' && user.role === 'client') { setError('Not an admin account'); return; }
-      if (user.role === 'client') navigate('/client/dashboard');
-      else navigate('/admin/dashboard');
-    }
+    const user = await login(username, password);
+    if (!user) { setError('Invalid credentials'); return; }
+    if (role === 'admin' && user.role === 'client') { setError('Not an admin account'); return; }
+    if (user.role === 'client') navigate('/client/dashboard');
+    else navigate('/admin/dashboard');
   };
 
   return (
@@ -66,7 +59,7 @@ const Login: React.FC = () => {
                   <span className="font-display font-semibold text-foreground">{t('client')}</span>
                 </button>
                 <button
-                  onClick={() => { setRole('admin'); setMode('signin'); }}
+                  onClick={() => setRole('admin')}
                   className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-secondary transition-all shadow-card group"
                 >
                   <Shield className="w-10 h-10 text-muted-foreground group-hover:text-secondary transition-colors" />
@@ -77,41 +70,19 @@ const Login: React.FC = () => {
           ) : (
             <motion.div key="form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
               <div className="rounded-xl border border-border p-6 shadow-card bg-card">
-                {role === 'client' && (
-                  <div className="flex gap-2 mb-6">
-                    <button
-                      onClick={() => setMode('signin')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${mode === 'signin' ? 'gradient-pink text-primary-foreground shadow-pink' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                      {t('login')}
-                    </button>
-                    <button
-                      onClick={() => setMode('signup')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${mode === 'signup' ? 'gradient-pink text-primary-foreground shadow-pink' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                      {t('signup')}
-                    </button>
-                  </div>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-foreground">{t('username')}</label>
                     <Input value={username} onChange={e => setUsername(e.target.value)} className="mt-1" />
                   </div>
-                  {mode === 'signup' && (
-                    <div>
-                      <label className="text-sm font-medium text-foreground">{t('phone')}</label>
-                      <Input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" />
-                    </div>
-                  )}
                   <div>
                     <label className="text-sm font-medium text-foreground">{t('password')}</label>
                     <Input type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1" />
                   </div>
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button type="submit" className="w-full gradient-pink text-primary-foreground shadow-pink hover:opacity-90 transition-opacity" disabled={loading}>
-                    {loading ? '...' : mode === 'signup' ? t('signup') : t('login')}
+                    {loading ? '...' : t('login')}
                   </Button>
                 </form>
 

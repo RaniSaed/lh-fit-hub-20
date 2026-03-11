@@ -3,9 +3,13 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LHLogo } from '@/components/LHLogo';
-import { Dumbbell, TrendingUp, Users, UserCog, LogOut, Languages, Menu, X } from 'lucide-react';
+import { Dumbbell, TrendingUp, Users, UserCog, LogOut, Languages, Menu, X, KeyRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const navItems = [
   { key: 'personalTraining', path: '/admin/training', icon: Dumbbell },
@@ -15,13 +19,42 @@ const navItems = [
 ];
 
 const AdminLayout: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, changePassword } = useAuth();
   const { t, toggleLang } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   const handleLogout = () => { logout(); navigate('/'); };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    if (!oldPassword || !newPassword) {
+      setPasswordError('Both fields are required');
+      return;
+    }
+
+    const success = await changePassword(oldPassword, newPassword);
+    if (success) {
+      setPasswordSuccess(true);
+      setOldPassword('');
+      setNewPassword('');
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setPasswordSuccess(false);
+      }, 2000);
+    } else {
+      setPasswordError('Incorrect current password or failed to update');
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -51,6 +84,10 @@ const AdminLayout: React.FC = () => {
           <button onClick={toggleLang} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary transition-colors">
             <Languages className="w-4 h-4" />
             {t('translateArabic')}
+          </button>
+          <button onClick={() => setIsPasswordModalOpen(true)} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary transition-colors">
+            <KeyRound className="w-4 h-4" />
+            Change Password
           </button>
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-destructive transition-colors">
             <LogOut className="w-4 h-4" />
@@ -95,7 +132,11 @@ const AdminLayout: React.FC = () => {
                 </button>
               );
             })}
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors mt-4">
+            <button onClick={() => { setIsPasswordModalOpen(true); setMobileOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-foreground/5 transition-colors mt-4">
+              <KeyRound className="w-5 h-5" />
+              Change Password
+            </button>
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors mt-2">
               <LogOut className="w-5 h-5" />
               {t('logout')}
             </button>
@@ -106,6 +147,30 @@ const AdminLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Current Password</Label>
+              <Input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+            </div>
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+            {passwordSuccess && <p className="text-sm text-green-500 font-medium">Password updated successfully!</p>}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
