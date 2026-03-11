@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=development
+      # INSTRUCTIONS TO CONNECT TO EXTERNAL DATABASE CONTAINER:
+      #
+      # Option 1: DB is running on your host machine (Mac/Windows).
+      # Use `host.docker.internal` as the DB host in the connection string.
+      # Example: postgresql://user:pass@host.docker.internal:5432/dbname
+      #
+      # Option 2: DB is in a separate Docker container with an explicit network.
+      # Uncomment the `networks` block below and at the bottom of the file.
+      # Then use the container name as the database host.
+      # Example: postgresql://user:pass@my-postgres-container:5432/dbname
+      - DATABASE_URL=postgresql+pg8000://lh_admin:supersecurepassword123@host.docker.internal:5432/lh_fit_hub_db
+    # Optional explicitly defined network:
+    # networks:
+    #   - external-db-net
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80" # Exposes the Nginx port 80 out to 8080 locally
+    depends_on:
+      - backend
+
+# Optional external network definition:
+# networks:
+#   external-db-net:
+#     external: true
+#     name: your_external_postgres_network_name
