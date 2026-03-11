@@ -155,10 +155,10 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ selectedDate, onSelectDate,
                                 {/* Indicators */}
                                 <div className="flex items-center justify-center mt-1 gap-1 h-3 mt-auto mb-1">
                                     {hasWorkout && (
-                                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-[#B0E0E6]'}`} />
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-secondary'}`} />
                                     )}
                                     {hasProgress && (
-                                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white/90' : 'bg-[#FF69B4]'}`} />
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white/90' : 'bg-primary'}`} />
                                     )}
                                 </div>
                             </motion.button>
