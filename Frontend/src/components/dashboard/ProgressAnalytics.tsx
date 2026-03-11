@@ -25,7 +25,7 @@ const CircularMetricCard = ({
     value,
     unit,
     max,
-    colorClass = "text-[#FF69B4]"
+    colorClass = "text-primary"
 }: {
     label: string,
     value: string | undefined,
@@ -154,8 +154,8 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
             {/* Action Header */}
             <div className="flex justify-between items-center glass p-5 rounded-3xl border border-border/40 shadow-md">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#FF69B4]/10 flex items-center justify-center">
-                        <BarChart2 className="w-5 h-5 text-[#FF69B4]" />
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <BarChart2 className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <h2 className="font-display font-semibold text-foreground">Analytics Report</h2>
@@ -186,13 +186,13 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                     <div className="grid grid-cols-2 gap-4 md:gap-6">
                         {/* Weight Ring */}
                         <div className="glass rounded-3xl p-6 shadow-md flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 relative overflow-hidden group border border-border/40">
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#8884d8]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative w-32 h-32 mb-4">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                     <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-muted/30" />
                                     <motion.circle
                                         cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" strokeLinecap="round"
-                                        className="text-[#8884d8]"
+                                        className="text-secondary"
                                         initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
                                         animate={{ strokeDashoffset: Math.max(0, 2 * Math.PI * 40 - (Math.min((parseFloat(activeProgress.weight || '0') / 120), 1) * 2 * Math.PI * 40)) }}
                                         transition={{ duration: 1.5, ease: "easeOut" }}
@@ -200,7 +200,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <Activity className="w-4 h-4 text-[#8884d8] mb-0.5" />
+                                    <Activity className="w-4 h-4 text-secondary mb-0.5" />
                                     <span className="text-3xl font-display font-bold text-foreground leading-none">{activeProgress.weight || '-'}</span>
                                     <span className="text-xs font-medium text-muted-foreground mt-0.5">ק״ג</span>
                                 </div>
@@ -212,13 +212,13 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
 
                         {/* Body Fat Ring */}
                         <div className="glass rounded-3xl p-6 shadow-md flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 relative overflow-hidden group border border-border/40">
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#FF69B4]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative w-32 h-32 mb-4">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                     <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-muted/30" />
                                     <motion.circle
                                         cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" strokeLinecap="round"
-                                        className="text-[#FF69B4]"
+                                        className="text-primary"
                                         initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
                                         animate={{ strokeDashoffset: Math.max(0, 2 * Math.PI * 40 - (Math.min((parseFloat(activeProgress.fatPercent || '0') / 40), 1) * 2 * Math.PI * 40)) }}
                                         transition={{ duration: 1.5, ease: "easeOut" }}
@@ -226,7 +226,7 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <TrendingUp className="w-4 h-4 text-[#FF69B4] mb-0.5" />
+                                    <TrendingUp className="w-4 h-4 text-primary mb-0.5" />
                                     <span className="text-3xl font-display font-bold text-foreground leading-none">{activeProgress.fatPercent || '-'}</span>
                                     <span className="text-xs font-medium text-muted-foreground mt-0.5">%</span>
                                 </div>
@@ -257,13 +257,13 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                 {/* Centralized Full Body Symmetry Polygon */}
                 <div className="mt-8 print:hidden">
                     <div className="glass rounded-[40px] p-6 md:p-10 shadow-xl flex flex-col items-center relative overflow-hidden group border border-border/30">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-[#8884d8]/5 via-transparent to-[#FF69B4]/5 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 via-transparent to-primary/5 pointer-events-none" />
 
                         <div className="text-center mb-6 z-10">
                             <h3 className="text-2xl font-display font-bold text-foreground flex items-center justify-center gap-3">
-                                <span className="w-3 h-3 rounded-full gradient-pink inline-block shadow-[0_0_10px_rgba(255,105,180,0.5)]" />
+                                <span className="w-3 h-3 rounded-full gradient-pink inline-block shadow-pink" />
                                 סימטריית גוף
-                                <span className="w-3 h-3 rounded-full gradient-blue inline-block shadow-[0_0_10px_rgba(136,132,216,0.5)]" />
+                                <span className="w-3 h-3 rounded-full gradient-blue inline-block shadow-blue" />
                             </h3>
                             <p className="text-sm text-muted-foreground mt-2">ניתוח איזון מקיף (ס״מ)</p>
                         </div>
@@ -273,8 +273,8 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
                                 <RadarChart cx="50%" cy="50%" outerRadius="75%" data={fullBodySymmetryData}>
                                     <defs>
                                         <radialGradient id="radarFill" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                                            <stop offset="0%" stopColor="#8884d8" stopOpacity={0.8} />
-                                            <stop offset="100%" stopColor="#FF69B4" stopOpacity={0.6} />
+                                            <stop offset="0%" stopColor="hsl(var(--secondary))" stopOpacity={0.8} />
+                                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
                                         </radialGradient>
                                     </defs>
                                     {/* The web background */}

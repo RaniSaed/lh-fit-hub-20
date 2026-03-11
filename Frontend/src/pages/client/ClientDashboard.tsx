@@ -133,7 +133,7 @@ const ClientDashboard: React.FC = () => {
         head: [['Machine #', 'Exercise', 'Sets × Reps']],
         body: group.exercises.map(e => [e.machineNumber, e.name, `${e.sets}×${e.reps}`]),
         theme: 'grid',
-        headStyles: { fillColor: [255, 105, 180] },
+        headStyles: { fillColor: [214, 105, 134] },
       });
       y = (doc as any).lastAutoTable.finalY + 10;
     });
