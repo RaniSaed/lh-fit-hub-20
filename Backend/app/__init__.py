@@ -11,11 +11,8 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    # Allow CORS for the frontend port 8080 or other React development ports
-    # CORS: allow Vercel frontend in production, localhost in dev
-    frontend_url = os.environ.get('FRONTEND_URL', '*')
-    origins = [frontend_url, 'http://localhost:8080', 'http://localhost:5173'] if frontend_url != '*' else '*'
-    cors.init_app(app, resources={r"/api/*": {"origins": origins}})
+    # Allow all origins — Vercel generates unique preview URLs per deploy
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
 
     # Register blueprints
     from app.routes.auth import auth_bp
