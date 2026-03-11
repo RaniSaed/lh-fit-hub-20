@@ -50,6 +50,8 @@ def update_user(user_id):
     if 'phone' in data: user.phone = data['phone']
     if 'role' in data: user.role = data['role']
     if 'medicalHistory' in data: user.medical_history = data['medicalHistory']
+    if 'password' in data and data['password']:
+        user.set_password(data['password'])
     
     db.session.commit()
     return jsonify(user.to_dict()), 200
