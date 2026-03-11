@@ -10,19 +10,19 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const columns = [
-  { key: 'date', he: 'תאריך' },
-  { key: 'endDate', he: 'עד תאריך' },
-  { key: 'weight', he: 'משקל' },
-  { key: 'fatPercent', he: 'אחוז שומן' },
-  { key: 'upperAbs', he: 'בטן עליונה' },
-  { key: 'midAbs', he: 'בטן אמצע' },
-  { key: 'lowerAbs', he: 'בטן תחתונה' },
-  { key: 'rightArm', he: 'זרוע ימין' },
-  { key: 'leftArm', he: 'זרוע שמאל' },
-  { key: 'rightThigh', he: 'ירך ימין' },
-  { key: 'leftThigh', he: 'ירך שמאל' },
-  { key: 'glutes', he: 'עכוז' },
-  { key: 'chest', he: 'חזה' },
+  { key: 'date', he: 'תאריך', en: 'Date' },
+  { key: 'endDate', he: 'עד תאריך', en: 'End Date' },
+  { key: 'weight', he: 'משקל', en: 'Weight (kg)' },
+  { key: 'fatPercent', he: 'אחוז שומן', en: 'Fat %' },
+  { key: 'upperAbs', he: 'בטן עליונה', en: 'Upper Abs' },
+  { key: 'midAbs', he: 'בטן אמצע', en: 'Mid Abs' },
+  { key: 'lowerAbs', he: 'בטן תחתונה', en: 'Lower Abs' },
+  { key: 'rightArm', he: 'זרוע ימין', en: 'Right Arm' },
+  { key: 'leftArm', he: 'זרוע שמאל', en: 'Left Arm' },
+  { key: 'rightThigh', he: 'ירך ימין', en: 'Right Thigh' },
+  { key: 'leftThigh', he: 'ירך שמאל', en: 'Left Thigh' },
+  { key: 'glutes', he: 'עכוז', en: 'Glutes' },
+  { key: 'chest', he: 'חזה', en: 'Chest' },
 ];
 
 const ProgressTracker: React.FC = () => {
@@ -97,6 +97,7 @@ const ProgressTracker: React.FC = () => {
 
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
+
     doc.setFontSize(16);
     doc.text('Training Progress', 14, 15);
     const client = clients.find(c => c.id === selectedUser);
@@ -104,8 +105,15 @@ const ProgressTracker: React.FC = () => {
 
     autoTable(doc, {
       startY: 30,
-      head: [columns.map(c => c.he)],
+      head: [columns.map(c => c.en)],
       body: entries.map(e => columns.map(c => (e as any)[c.key] || '')),
+      headStyles: {
+        fillColor: [16, 127, 123],
+        halign: 'center',
+      },
+      styles: {
+        halign: 'center',
+      },
     });
     doc.save('progress.pdf');
   };

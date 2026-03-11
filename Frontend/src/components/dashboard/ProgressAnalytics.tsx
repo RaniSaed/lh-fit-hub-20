@@ -9,6 +9,7 @@ import {
     RadialBarChart, RadialBar
 } from 'recharts';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 // Types passed from the parent component
@@ -121,32 +122,49 @@ export const ProgressAnalytics: React.FC<ProgressAnalyticsProps> = ({ activeProg
         { subject: 'זרוע שמאל', value: parseFloat(activeProgress.leftArm) || 0, fullMark: 60 },
     ];
 
-    const handleDownloadPDF = async () => {
-        if (!printRef.current) return;
-        setIsDownloading(true);
+    const handleDownloadPDF = () => {
+        const doc = new jsPDF({ orientation: 'landscape' });
 
-        try {
-            const element = printRef.current;
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
-            const imgData = canvas.toDataURL('image/png');
+        doc.setFontSize(16);
+        doc.text('Progress Tracker', 14, 15);
+        doc.setFontSize(11);
+        doc.text(`Client: ${user?.username || ''}`, 14, 24);
+        doc.text(`Date: ${activeProgress.date}${activeProgress.endDate ? ' → ' + activeProgress.endDate : ''}`, 14, 31);
 
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4',
-            });
+        const columns = [
+            { label: 'Date', key: 'date' },
+            { label: 'End Date', key: 'endDate' },
+            { label: 'Weight (kg)', key: 'weight' },
+            { label: 'Fat %', key: 'fatPercent' },
+            { label: 'Upper Abs', key: 'upperAbs' },
+            { label: 'Mid Abs', key: 'midAbs' },
+            { label: 'Lower Abs', key: 'lowerAbs' },
+            { label: 'Right Arm', key: 'rightArm' },
+            { label: 'Left Arm', key: 'leftArm' },
+            { label: 'Right Thigh', key: 'rightThigh' },
+            { label: 'Left Thigh', key: 'leftThigh' },
+            { label: 'Glutes', key: 'glutes' },
+            { label: 'Chest', key: 'chest' },
+        ];
 
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const sortedHistory = [...progressHistory].sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
 
-            // Ensure the generated image fits precisely on a normal A4 sheet length
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`ProgressTracker_${user?.username || 'Client'}_${activeProgress.date}.pdf`);
-        } catch (error) {
-            console.error('Error generating PDF', error);
-        } finally {
-            setIsDownloading(false);
-        }
+        autoTable(doc, {
+            startY: 38,
+            head: [columns.map(c => c.label)],
+            body: sortedHistory.map(entry => columns.map(c => (entry as any)[c.key] || '')),
+            headStyles: {
+                fillColor: [16, 127, 123],
+                halign: 'center',
+            },
+            styles: {
+                halign: 'center',
+            },
+        });
+
+        doc.save(`ProgressTracker_${user?.username || 'Client'}_${activeProgress.date}.pdf`);
     };
 
     return (
