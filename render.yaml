@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: lh-fit-hub-backend
+    env: python
+    rootDir: Backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lh-fit-hub-db
+          property: connectionString
+
+databases:
+  - name: lh-fit-hub-db
+    plan: free

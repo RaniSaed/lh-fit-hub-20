@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify
 from config import config
 from app.extensions import db, migrate, jwt, cors
@@ -11,7 +12,10 @@ def create_app(config_name='default'):
     migrate.init_app(app, db)
     jwt.init_app(app)
     # Allow CORS for the frontend port 8080 or other React development ports
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    # CORS: allow Vercel frontend in production, localhost in dev
+    frontend_url = os.environ.get('FRONTEND_URL', '*')
+    origins = [frontend_url, 'http://localhost:8080', 'http://localhost:5173'] if frontend_url != '*' else '*'
+    cors.init_app(app, resources={r"/api/*": {"origins": origins}})
 
     # Register blueprints
     from app.routes.auth import auth_bp

@@ -133,8 +133,8 @@ const mockProgress: ProgressEntry[] = [
   { id: 'p2', userId: '3', date: '2024-07-01', endDate: '', weight: '83', fatPercent: '20', upperAbs: '88', midAbs: '86', lowerAbs: '90', rightArm: '36', leftArm: '35', rightThigh: '57', leftThigh: '56', glutes: '99', chest: '104' },
 ];
 
-// API Base URL
-const API_URL = 'http://localhost:5001/api';
+// API Base URL — set VITE_API_URL in Vercel env vars to point at your Render backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('lh_access_token');
