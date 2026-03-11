@@ -5,7 +5,10 @@ import { trainingPlanService, userService, progressService, type TrainingPlan, t
 import { LHLogo } from '@/components/LHLogo';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Languages, Download, Play, Dumbbell, Activity, TrendingUp } from 'lucide-react';
+import { LogOut, Languages, Download, Play, Dumbbell, Activity, TrendingUp, KeyRound } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -14,7 +17,7 @@ import FullCalendar from '@/components/dashboard/FullCalendar';
 import { ProgressAnalytics } from '@/components/dashboard/ProgressAnalytics';
 
 const ClientDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, changePassword } = useAuth();
   const { t, toggleLang } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'workout' | 'progress'>('workout');
@@ -24,6 +27,12 @@ const ClientDashboard: React.FC = () => {
   const [activePlan, setActivePlan] = useState<TrainingPlan | null>(null);
   const [activeProgress, setActiveProgress] = useState<ProgressEntry | null>(null);
   const [coachName, setCoachName] = useState('');
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   // Normalize local Date to YYYY-MM-DD
   const toDateStr = (d: Date) => {
@@ -113,6 +122,30 @@ const ClientDashboard: React.FC = () => {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    if (!oldPassword || !newPassword) {
+      setPasswordError('Both fields are required');
+      return;
+    }
+
+    const success = await changePassword(oldPassword, newPassword);
+    if (success) {
+      setPasswordSuccess(true);
+      setOldPassword('');
+      setNewPassword('');
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setPasswordSuccess(false);
+      }, 2000);
+    } else {
+      setPasswordError('Incorrect current password or failed to update');
+    }
+  };
+
   const downloadPDF = () => {
     if (!activePlan) return;
     const doc = new jsPDF();
@@ -154,6 +187,9 @@ const ClientDashboard: React.FC = () => {
         <div className="flex items-center gap-3">
           <button onClick={toggleLang} className="p-2.5 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-all duration-300">
             <Languages className="w-5 h-5" />
+          </button>
+          <button onClick={() => setIsPasswordModalOpen(true)} className="p-2.5 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-primary transition-all duration-300">
+            <KeyRound className="w-5 h-5" />
           </button>
           <button onClick={handleLogout} className="p-2.5 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300">
             <LogOut className="w-5 h-5" />
@@ -309,6 +345,30 @@ const ClientDashboard: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
+
+      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Current Password</Label>
+              <Input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+            </div>
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+            {passwordSuccess && <p className="text-sm text-green-500 font-medium">Password updated successfully!</p>}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
