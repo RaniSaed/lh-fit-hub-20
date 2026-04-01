@@ -5,6 +5,7 @@ export interface User {
   password: string;
   role: 'client' | 'coach' | 'superadmin';
   medicalHistory?: string;
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -69,12 +70,12 @@ export interface Coach {
 
 // Mock users
 const mockUsers: User[] = [
-  { id: '1', username: 'superadmin', phone: '0500000000', password: 'admin123!@#', role: 'superadmin', createdAt: '2024-01-01' },
-  { id: '2', username: 'coach_mike', phone: '0501111111', password: 'coach123', role: 'coach', createdAt: '2024-02-01' },
-  { id: '3', username: 'john_doe', phone: '0502222222', password: 'client123', role: 'client', medicalHistory: 'Lower back injury - herniated disc L4-L5', createdAt: '2024-03-01' },
-  { id: '4', username: 'jane_smith', phone: '0503333333', password: 'client123', role: 'client', createdAt: '2024-03-15' },
-  { id: '5', username: 'alex_cohen', phone: '0504444444', password: 'client123', role: 'client', medicalHistory: 'Knee surgery recovery - ACL repair', createdAt: '2024-04-01' },
-  { id: '6', username: 'sarah_levi', phone: '0505555555', password: 'client123', role: 'client', createdAt: '2024-04-15' },
+  { id: '1', username: 'superadmin', phone: '0500000000', password: 'admin123!@#', role: 'superadmin', isActive: true, createdAt: '2024-01-01' },
+  { id: '2', username: 'coach_mike', phone: '0501111111', password: 'coach123', role: 'coach', isActive: true, createdAt: '2024-02-01' },
+  { id: '3', username: 'john_doe', phone: '0502222222', password: 'client123', role: 'client', medicalHistory: 'Lower back injury - herniated disc L4-L5', isActive: true, createdAt: '2024-03-01' },
+  { id: '4', username: 'jane_smith', phone: '0503333333', password: 'client123', role: 'client', isActive: true, createdAt: '2024-03-15' },
+  { id: '5', username: 'alex_cohen', phone: '0504444444', password: 'client123', role: 'client', medicalHistory: 'Knee surgery recovery - ACL repair', isActive: true, createdAt: '2024-04-01' },
+  { id: '6', username: 'sarah_levi', phone: '0505555555', password: 'client123', role: 'client', isActive: true, createdAt: '2024-04-15' },
 ];
 
 const mockCoaches: Coach[] = [
@@ -145,13 +146,17 @@ const getAuthHeaders = () => {
 };
 
 export const authService = {
-  login: async (username: string, password: string): Promise<User | null> => {
+  login: async (username: string, password: string): Promise<User | { error: string } | null> => {
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+      if (res.status === 403) {
+        const data = await res.json();
+        return { error: data.error };
+      }
       if (!res.ok) return null;
       const data = await res.json();
       localStorage.setItem('lh_access_token', data.token);
@@ -185,7 +190,7 @@ export const userService = {
     const res = await fetch(`${API_URL}/users/admins`, { headers: getAuthHeaders() });
     return res.json();
   },
-  add: async (user: Omit<User, 'id' | 'createdAt' | 'role'> & { role?: User['role'] }): Promise<User> => {
+  add: async (user: Omit<User, 'id' | 'createdAt' | 'role' | 'isActive'> & { role?: User['role']; isActive?: boolean }): Promise<User> => {
     const res = await fetch(`${API_URL}/users/`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -198,6 +203,14 @@ export const userService = {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data)
+    });
+    if (!res.ok) return null;
+    return res.json();
+  },
+  toggleStatus: async (id: string): Promise<User | null> => {
+    const res = await fetch(`${API_URL}/users/${id}/toggle-status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders()
     });
     if (!res.ok) return null;
     return res.json();

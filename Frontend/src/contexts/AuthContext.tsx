@@ -4,7 +4,7 @@ import { User, authService } from '@/services/mockData';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<User | null>;
+  login: (username: string, password: string) => Promise<User | { error: string } | null>;
   changePassword: (oldPass: string, newPass: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -19,7 +19,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const u = await authService.login(username, password);
-      if (u) setUser(u);
+      if (u && !('error' in u)) setUser(u);
       return u;
     } finally {
       setLoading(false);

@@ -22,10 +22,11 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    const user = await login(username, password);
-    if (!user) { setError('Invalid credentials'); return; }
-    if (role === 'admin' && user.role === 'client') { setError('Not an admin account'); return; }
-    if (user.role === 'client') navigate('/client/dashboard');
+    const result = await login(username, password);
+    if (!result) { setError('Invalid credentials'); return; }
+    if ('error' in result) { setError(result.error); return; }
+    if (role === 'admin' && result.role === 'client') { setError('Not an admin account'); return; }
+    if (result.role === 'client') navigate('/client/dashboard');
     else navigate('/admin/dashboard');
   };
 

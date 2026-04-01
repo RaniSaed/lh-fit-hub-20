@@ -32,6 +32,7 @@ const UsersManagement: React.FC = () => {
   const [formPassword, setFormPassword] = useState('');
   const [hasMedical, setHasMedical] = useState(false);
   const [formMedical, setFormMedical] = useState('');
+  const [formIsActive, setFormIsActive] = useState(true);
 
   const fetchUsers = async () => {
     const allUsers = await userService.getAll();
@@ -55,9 +56,10 @@ const UsersManagement: React.FC = () => {
       phone: formPhone,
       password: formPassword,
       medicalHistory: hasMedical ? formMedical : undefined,
+      isActive: formIsActive,
     });
     setIsAddUserOpen(false);
-    setFormUsername(''); setFormPhone(''); setFormPassword(''); setHasMedical(false); setFormMedical('');
+    setFormUsername(''); setFormPhone(''); setFormPassword(''); setHasMedical(false); setFormMedical(''); setFormIsActive(true);
     fetchUsers();
   };
 
@@ -87,6 +89,11 @@ const UsersManagement: React.FC = () => {
     });
     setIsResetPasswordOpen(false);
     setFormPassword('');
+  };
+
+  const handleToggleStatus = async (user: User) => {
+    await userService.toggleStatus(user.id);
+    fetchUsers();
   };
 
   const openEditModal = (user: User) => {
@@ -129,8 +136,9 @@ const UsersManagement: React.FC = () => {
             <tr className="border-b border-border">
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t('username')}</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t('phone')}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t('progressTracker')}</th>
-              {isSuperadmin && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -138,6 +146,17 @@ const UsersManagement: React.FC = () => {
               <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                 <td className="px-4 py-3 text-foreground">{user.username}</td>
                 <td className="px-4 py-3 text-foreground">{user.phone}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${user.isActive
+                        ? 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-red-500/10 text-red-500'
+                      }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    {user.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
                 <td className="px-4 py-3">
                   {progressMap[user.id] && (
                     <button
@@ -148,25 +167,33 @@ const UsersManagement: React.FC = () => {
                     </button>
                   )}
                 </td>
-                {isSuperadmin && (
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openResetPasswordModal(user)} title="Force Reset Password">
-                        <KeyRound className="w-4 h-4 text-emerald-500" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEditModal(user)} title="Edit User">
-                        <Edit2 className="w-4 h-4 text-blue-500" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openDeleteModal(user)} title="Delete User">
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </td>
-                )}
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    {/* Quick-toggle switch — available to all admins */}
+                    <Switch
+                      checked={user.isActive}
+                      onCheckedChange={() => handleToggleStatus(user)}
+                      title={user.isActive ? 'Deactivate user' : 'Activate user'}
+                    />
+                    {isSuperadmin && (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => openResetPasswordModal(user)} title="Force Reset Password">
+                          <KeyRound className="w-4 h-4 text-emerald-500" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEditModal(user)} title="Edit User">
+                          <Edit2 className="w-4 h-4 text-blue-500" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openDeleteModal(user)} title="Delete User">
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={isSuperadmin ? 4 : 3} className="px-4 py-8 text-center text-muted-foreground">No users found</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No users found</td></tr>
             )}
           </tbody>
         </table>
@@ -201,6 +228,15 @@ const UsersManagement: React.FC = () => {
                 <Input required value={formMedical} onChange={e => setFormMedical(e.target.value)} />
               </div>
             )}
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5 bg-muted/30">
+              <div>
+                <Label className="text-sm font-medium">Account Status</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {formIsActive ? 'User can log in immediately' : 'User will be blocked from logging in'}
+                </p>
+              </div>
+              <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
+            </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => setIsAddUserOpen(false)}>Cancel</Button>
               <Button type="submit">Add User</Button>
