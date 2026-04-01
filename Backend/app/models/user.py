@@ -11,6 +11,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='client') # client, coach, superadmin
     medical_history = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -31,5 +32,6 @@ class User(db.Model):
             'phone': self.phone,
             'role': self.role,
             'medicalHistory': self.medical_history,
+            'isActive': self.is_active,
             'createdAt': self.created_at.strftime('%Y-%m-%d')
         }

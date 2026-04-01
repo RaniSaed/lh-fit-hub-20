@@ -32,11 +32,12 @@ def add_user():
         username=data.get('username'),
         phone=data.get('phone'),
         role=data.get('role', 'client'),
-        medical_history=data.get('medicalHistory', '')
+        medical_history=data.get('medicalHistory', ''),
+        is_active=data.get('isActive', True)
     )
     # Give a default password if created by admin
-    new_user.set_password(data.get('password', 'client123')) 
-    
+    new_user.set_password(data.get('password', 'client123'))
+
     db.session.add(new_user)
     db.session.commit()
     return jsonify(new_user.to_dict()), 201
@@ -50,9 +51,17 @@ def update_user(user_id):
     if 'phone' in data: user.phone = data['phone']
     if 'role' in data: user.role = data['role']
     if 'medicalHistory' in data: user.medical_history = data['medicalHistory']
+    if 'isActive' in data: user.is_active = data['isActive']
     if 'password' in data and data['password']:
         user.set_password(data['password'])
-    
+
+    db.session.commit()
+    return jsonify(user.to_dict()), 200
+
+@users_bp.route('/<int:user_id>/toggle-status', methods=['PATCH'])
+def toggle_user_status(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_active = not user.is_active
     db.session.commit()
     return jsonify(user.to_dict()), 200
 

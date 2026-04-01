@@ -14,6 +14,8 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     
     if user and user.check_password(data['password']):
+        if not user.is_active:
+            return jsonify({"error": "Your account is expired - go to the secretary to make your account active."}), 403
         access_token = create_access_token(identity=str(user.id))
         return jsonify({
             "token": access_token,
