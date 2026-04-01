@@ -9,6 +9,15 @@ app = create_app(os.getenv('FLASK_ENV') or 'default')
 with app.app_context():
     db.create_all()
 
+    # Auto-migrate the existing live database on Render to add the new column
+    try:
+        from sqlalchemy import text
+        db.session.execute(text('ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;'))
+        db.session.commit()
+        print("🚀 Successfully added is_active column to the database schema!")
+    except Exception as e:
+        db.session.rollback() # Column already exists, safe to ignore
+
     # Seed superadmin on first deploy if no users exist
     if User.query.count() == 0:
         print("🌱 No users found — seeding initial superadmin...")
