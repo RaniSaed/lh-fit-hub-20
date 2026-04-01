@@ -145,6 +145,12 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper: Normalize user object from backend to ensure isActive defaults to true if missing
+const normalizeUser = (u: any): User => ({
+  ...u,
+  isActive: u.isActive !== undefined ? u.isActive : true
+});
+
 export const authService = {
   login: async (username: string, password: string): Promise<User | { error: string } | null> => {
     try {
@@ -160,7 +166,7 @@ export const authService = {
       if (!res.ok) return null;
       const data = await res.json();
       localStorage.setItem('lh_access_token', data.token);
-      return data.user;
+      return normalizeUser(data.user);
     } catch (e) {
       console.error('Login failed', e);
       return null;
@@ -179,16 +185,19 @@ export const authService = {
 export const userService = {
   getAll: async (): Promise<User[]> => {
     const res = await fetch(`${API_URL}/users/`, { headers: getAuthHeaders() });
-    return res.json();
+    const users = await res.json();
+    return users.map(normalizeUser);
   },
   getById: async (id: string): Promise<User | undefined> => {
     const res = await fetch(`${API_URL}/users/${id}`, { headers: getAuthHeaders() });
     if (!res.ok) return undefined;
-    return res.json();
+    const user = await res.json();
+    return normalizeUser(user);
   },
   getAllAdmins: async (): Promise<User[]> => {
     const res = await fetch(`${API_URL}/users/admins`, { headers: getAuthHeaders() });
-    return res.json();
+    const admins = await res.json();
+    return admins.map(normalizeUser);
   },
   add: async (user: Omit<User, 'id' | 'createdAt' | 'role' | 'isActive'> & { role?: User['role']; isActive?: boolean }): Promise<User> => {
     const res = await fetch(`${API_URL}/users/`, {
@@ -196,7 +205,8 @@ export const userService = {
       headers: getAuthHeaders(),
       body: JSON.stringify(user)
     });
-    return res.json();
+    const newUser = await res.json();
+    return normalizeUser(newUser);
   },
   update: async (id: string, data: Partial<User>): Promise<User | null> => {
     const res = await fetch(`${API_URL}/users/${id}`, {
@@ -205,7 +215,8 @@ export const userService = {
       body: JSON.stringify(data)
     });
     if (!res.ok) return null;
-    return res.json();
+    const updatedUser = await res.json();
+    return normalizeUser(updatedUser);
   },
   toggleStatus: async (id: string): Promise<User | null> => {
     const res = await fetch(`${API_URL}/users/${id}/toggle-status`, {
@@ -213,7 +224,8 @@ export const userService = {
       headers: getAuthHeaders()
     });
     if (!res.ok) return null;
-    return res.json();
+    const toggledUser = await res.json();
+    return normalizeUser(toggledUser);
   },
   remove: async (id: string): Promise<boolean> => {
     const res = await fetch(`${API_URL}/users/${id}`, {
